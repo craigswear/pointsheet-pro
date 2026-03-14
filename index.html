@@ -783,11 +783,130 @@ a{color:inherit;text-decoration:none}
 </div>
 
 <div id="modal-upgrade" class="modal-overlay hide">
-  <div class="modal-box">
-    <div class="modal-header"><h2>Upgrade Your Plan</h2><span class="modal-close" onclick="closeModal('modal-upgrade')">✕</span></div>
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header"><h2>🚀 Upgrade Your Plan</h2><span class="modal-close" onclick="closeModal('modal-upgrade')">✕</span></div>
     <div class="modal-body">
-      <p style="font-size:15px;color:var(--ink2);margin-bottom:24px" id="upgrade-message">You've reached your plan limit.</p>
+      <p style="font-size:15px;color:var(--ink2);margin-bottom:20px;line-height:1.6;white-space:pre-line" id="upgrade-message">Upgrade to unlock more features.</p>
       <div style="display:flex;flex-direction:column;gap:12px">
+        <a href="https://buy.stripe.com/6oU9AS4931jO7DY2ZY2Ji00" target="_blank" style="text-decoration:none" onclick="closeModal('modal-upgrade')">
+          <div style="border:2px solid #2D6A4F;border-radius:10px;padding:16px;cursor:pointer;background:#F0FDF4;transition:all .15s">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <strong style="font-size:15px;color:#15803D">🏫 School License</strong>
+              <span style="font-size:18px;font-weight:700;color:#15803D">$897/yr</span>
+            </div>
+            <div style="font-size:13px;color:var(--ink2);line-height:1.6">Up to 30 teachers · Unlimited students · Admin dashboard · <strong>🤖 AI Reports included</strong></div>
+          </div>
+        </a>
+        <a href="https://buy.stripe.com/00w4gyfRL0fK5vQfMK2Ji01" target="_blank" style="text-decoration:none" onclick="closeModal('modal-upgrade')">
+          <div style="border:1px solid var(--border-md);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <strong style="font-size:15px">🏛️ District License</strong>
+              <span style="font-size:18px;font-weight:700">$1,497/yr</span>
+            </div>
+            <div style="font-size:13px;color:var(--ink2);line-height:1.6">Up to 5 schools · Unlimited teachers · District-wide reports · <strong>🤖 AI Reports included</strong></div>
+          </div>
+        </a>
+        <div style="text-align:center;padding:8px 0;font-size:13px;color:var(--ink3)">
+          Questions? <a href="mailto:samsforschools@gmail.com" style="color:var(--blue)">samsforschools@gmail.com</a>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-upgrade')">Maybe Later</button></div>
+  </div>
+</div>
+
+<!-- AI Report Modal -->
+<div id="modal-ai-report" class="modal-overlay hide">
+  <div class="modal-box" style="max-width:680px;max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <h2 id="ai-modal-title">🤖 AI Report Generator</h2>
+      <span class="modal-close" onclick="closeModal('modal-ai-report')">✕</span>
+    </div>
+    <div class="modal-body">
+      <!-- Student selector & type -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="form-group" style="margin:0">
+          <label>Student</label>
+          <select id="ai-student-select" onchange="aiStudentChanged()">
+            <option value="">Select a student...</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Report Type</label>
+          <select id="ai-report-type">
+            <option value="smart">🎯 SMART IEP Goals</option>
+            <option value="bip">📋 Behavior Intervention Plan (BIP)</option>
+            <option value="summary">📊 Progress Summary</option>
+          </select>
+        </div>
+      </div>
+      <!-- Data preview -->
+      <div id="ai-data-preview" style="background:var(--bg);border-radius:8px;padding:14px;font-size:13px;color:var(--ink2);margin-bottom:16px;min-height:60px">
+        Select a student to preview their behavioral data.
+      </div>
+      <!-- Generate button -->
+      <button onclick="generateAIReport()" id="ai-generate-btn" class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-bottom:20px">
+        🤖 Generate Report
+      </button>
+      <!-- Output -->
+      <div id="ai-output" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:14px;font-weight:600;color:var(--ink2)" id="ai-output-label">Generated Report</div>
+          <div style="display:flex;gap:8px">
+            <button onclick="copyAIOutput()" class="btn btn-sm btn-outline">📋 Copy</button>
+            <button onclick="downloadAIOutput()" class="btn btn-sm btn-outline">⬇️ Download</button>
+          </div>
+        </div>
+        <div id="ai-output-content" style="background:#fff;border:1px solid var(--border-md);border-radius:8px;padding:20px;font-size:14px;line-height:1.8;color:var(--ink);white-space:pre-wrap;font-family:inherit;max-height:400px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-share" class="modal-overlay hide">
+  <div class="modal-box">
+    <div class="modal-header"><h2>Share Summary</h2><span class="modal-close" onclick="closeModal('modal-share')">✕</span></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Parent / Guardian Email</label><input type="email" id="share-email" placeholder="parent@email.com"></div>
+      <div style="background:var(--bg);border-radius:var(--radius);padding:16px;font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:8px" id="share-preview">Loading...</div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--blue)"> Attach PDF copy</label>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-share')">Cancel</button><button class="btn btn-primary" onclick="sendShare()">Send</button></div>
+  </div>
+</div>
+
+<div id="modal-upgrade" class="modal-overlay hide">
+  <div class="modal-box" style="max-width:480px">
+    <div class="modal-header"><h2>🚀 Upgrade Your Plan</h2><span class="modal-close" onclick="closeModal('modal-upgrade')">✕</span></div>
+    <div class="modal-body">
+      <p style="font-size:15px;color:var(--ink2);margin-bottom:20px;line-height:1.6;white-space:pre-line" id="upgrade-message">Upgrade to unlock more features.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <a href="https://buy.stripe.com/6oU9AS4931jO7DY2ZY2Ji00" target="_blank" style="text-decoration:none" onclick="closeModal('modal-upgrade')">
+          <div style="border:2px solid #2D6A4F;border-radius:10px;padding:16px;cursor:pointer;background:#F0FDF4;transition:all .15s">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <strong style="font-size:15px;color:#15803D">🏫 School License</strong>
+              <span style="font-size:18px;font-weight:700;color:#15803D">$897/yr</span>
+            </div>
+            <div style="font-size:13px;color:var(--ink2);line-height:1.6">Up to 30 teachers · Unlimited students · Admin dashboard · <strong>🤖 AI Reports included</strong></div>
+          </div>
+        </a>
+        <a href="https://buy.stripe.com/00w4gyfRL0fK5vQfMK2Ji01" target="_blank" style="text-decoration:none" onclick="closeModal('modal-upgrade')">
+          <div style="border:1px solid var(--border-md);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <strong style="font-size:15px">🏛️ District License</strong>
+              <span style="font-size:18px;font-weight:700">$1,497/yr</span>
+            </div>
+            <div style="font-size:13px;color:var(--ink2);line-height:1.6">Up to 5 schools · Unlimited teachers · District-wide reports · <strong>🤖 AI Reports included</strong></div>
+          </div>
+        </a>
+        <div style="text-align:center;padding:8px 0;font-size:13px;color:var(--ink3)">
+          Questions? <a href="mailto:samsforschools@gmail.com" style="color:var(--blue)">samsforschools@gmail.com</a>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-upgrade')">Maybe Later</button></div>
+  </div>
+</div>
         <div style="border:1px solid var(--border-md);border-radius:var(--radius);padding:16px;cursor:pointer" onclick="contactSales('school')" class="feat-card" style="margin:0">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:15px">School License</strong><span style="font-size:18px;font-weight:700;color:var(--blue)">$897/yr</span></div>
           <p style="font-size:13px;color:var(--ink2)">Up to 30 teachers · Admin dashboard · School-wide PBIS reports · Unlimited students</p>
@@ -1766,6 +1885,12 @@ function contactSales(plan) {
 // ── AI REPORT GENERATOR ──
 
 function openAIReport(studentId) {
+  // Gate AI reports to School/District plan — upsell for Individual
+  const plan = getPlan();
+  if (plan === 'individual' && !userProfile?.isOwner) {
+    openUpgradeModal(`🤖 AI Reports are available on the School License.\n\nGenerate SMART IEP goals, full BIPs, and progress summaries from your real behavioral data — powered by AI.\n\nUpgrade to School License ($897/yr) to unlock AI Reports for your whole department.`);
+    return;
+  }
   // Populate student dropdown
   const sel = document.getElementById('ai-student-select');
   sel.innerHTML = '<option value="">Select a student...</option>' +
