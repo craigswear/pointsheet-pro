@@ -629,14 +629,18 @@ a{color:inherit;text-decoration:none}
 
 <!-- MODALS -->
 <div id="modal-add-student" class="modal-overlay hide">
-  <div class="modal-box" style="max-width:520px">
+  <div class="modal-box" style="max-width:560px;max-height:90vh;overflow-y:auto">
     <div class="modal-header"><h2>Add Student</h2><span class="modal-close" onclick="closeModal('modal-add-student')">✕</span></div>
     <div class="modal-body">
+
+      <!-- Basic Info -->
       <div class="form-group"><label>Student Full Name</label><input type="text" id="ns-name" placeholder="First Last"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
         <div class="form-group"><label>Grade</label><select id="ns-grade"><option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div>
         <div class="form-group"><label>Target %</label><input type="number" id="ns-goal" value="80" min="50" max="100"></div>
       </div>
+
+      <!-- Theme -->
       <div class="form-group">
         <label>Behavioral Theme</label>
         <select id="ns-theme" onchange="updateThemePreview()">
@@ -653,13 +657,60 @@ a{color:inherit;text-decoration:none}
         <div class="form-group" style="margin:0"><label style="font-size:11px;color:var(--ink3)">Category 3</label><input type="text" id="ns-cat-2" value="Support" style="font-size:13px"></div>
         <div class="form-group" style="margin:0"><label style="font-size:11px;color:var(--ink3)">Category 4</label><input type="text" id="ns-cat-3" value="Excellence" style="font-size:13px"></div>
       </div>
+
+      <!-- Tracker settings -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-        <div class="form-group"><label>Periods/Day</label><select id="ns-periods"><option value="4">4 periods</option><option value="5">5 periods</option><option value="6" selected>6 periods</option><option value="7">7 periods</option><option value="8">8 periods</option></select></div>
+        <div class="form-group"><label>Periods/Day</label><select id="ns-periods" onchange="syncScheduleRows()"><option value="4">4 periods</option><option value="5">5 periods</option><option value="6" selected>6 periods</option><option value="7">7 periods</option><option value="8">8 periods</option></select></div>
         <div class="form-group"><label>Tracker Length</label><select id="ns-tracker"><option value="45" selected>45 Days</option><option value="28">4 Weeks (28 days)</option></select></div>
         <div class="form-group"><label>Start Date</label><input type="date" id="ns-startdate"></div>
       </div>
+
+      <!-- Period Teacher Schedule -->
+      <div style="border-top:1px solid var(--border);margin:8px 0 16px;padding-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <label style="font-size:13px;font-weight:600;color:var(--ink2);margin:0">📅 Period Teacher Schedule <span style="font-size:11px;font-weight:400;color:var(--ink3)">(optional)</span></label>
+          <button type="button" class="btn btn-sm btn-outline" onclick="toggleScheduleSection()" id="ns-schedule-toggle" style="font-size:11px;padding:4px 10px">Show</button>
+        </div>
+        <p style="font-size:12px;color:var(--ink3);margin-bottom:10px">Middle/high school: add each period teacher's name and email. You can send them a scoring link daily with one click — no login needed for them.</p>
+        <div id="ns-schedule-section" class="hide">
+          <div id="ns-schedule-rows" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-add-student')">Cancel</button><button class="btn btn-primary" onclick="addStudent()">Add Student</button></div>
+  </div>
+</div>
+
+<div id="modal-send-sheet" class="modal-overlay hide">
+  <div class="modal-box" style="max-width:540px">
+    <div class="modal-header"><h2>📧 Send Today's Point Sheet</h2><span class="modal-close" onclick="closeModal('modal-send-sheet')">✕</span></div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--ink2);margin-bottom:16px">Each period teacher gets a unique link for <strong id="send-sheet-student-name"></strong>. They click it, score their period (no login needed), and submit. You see results instantly.</p>
+      <div id="send-sheet-teacher-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;font-size:12px;color:var(--ink3)">
+        💡 Links expire at midnight. Click "Send All Emails" to open your email client for all teachers at once.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-send-sheet')">Close</button>
+      <button class="btn btn-primary" onclick="sendAllPeriodEmails()" id="send-all-btn">📧 Send All Emails</button>
+    </div>
+  </div>
+</div>
+
+<!-- Guest Scoring Page (no login) -->
+<div id="page-score" class="page">
+  <div style="min-height:100vh;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px">
+    <div style="width:100%;max-width:520px">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:22px;font-weight:700;color:var(--ink)">PointSheet Pro</div>
+        <div style="font-size:13px;color:var(--ink3)">Period Scoring</div>
+      </div>
+      <div id="score-page-content">
+        <div style="text-align:center;padding:40px;color:var(--ink3)">Loading...</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -765,12 +816,235 @@ function openAddStudentModal() {
   document.getElementById('ns-theme').value = 'rise';
   updateThemePreview();
   document.getElementById('ns-name').value = '';
+  // Reset schedule section to hidden
+  const sec = document.getElementById('ns-schedule-section');
+  const btn = document.getElementById('ns-schedule-toggle');
+  if (sec) sec.classList.add('hide');
+  if (btn) btn.textContent = 'Show';
   openModal('modal-add-student');
 }
 
-// ── INIT ──
+// ── PERIOD TEACHER SCHEDULE ──
+
+function toggleScheduleSection() {
+  const sec = document.getElementById('ns-schedule-section');
+  const btn = document.getElementById('ns-schedule-toggle');
+  const hidden = sec.classList.contains('hide');
+  sec.classList.toggle('hide', !hidden);
+  btn.textContent = hidden ? 'Hide' : 'Show';
+  if (hidden) syncScheduleRows();
+}
+
+function syncScheduleRows() {
+  const periods = parseInt(document.getElementById('ns-periods')?.value) || 6;
+  const container = document.getElementById('ns-schedule-rows');
+  if (!container) return;
+  const existing = [...container.querySelectorAll('.schedule-row')];
+  const existingData = existing.map(r => ({
+    name: r.querySelector('.sch-name')?.value || '',
+    email: r.querySelector('.sch-email')?.value || ''
+  }));
+  container.innerHTML = '';
+  for (let i = 0; i < periods; i++) {
+    const row = document.createElement('div');
+    row.className = 'schedule-row';
+    row.style = 'display:grid;grid-template-columns:36px 1fr 1fr;gap:8px;align-items:center';
+    row.innerHTML = `
+      <div style="font-size:12px;font-weight:600;color:var(--ink3);text-align:center;background:var(--bg);border-radius:6px;padding:6px 0">P${i+1}</div>
+      <input class="sch-name" type="text" placeholder="Teacher name" value="${existingData[i]?.name || ''}" style="padding:7px 10px;border:1px solid var(--border-md);border-radius:6px;font-size:13px;font-family:inherit">
+      <input class="sch-email" type="email" placeholder="teacher@school.edu" value="${existingData[i]?.email || ''}" style="padding:7px 10px;border:1px solid var(--border-md);border-radius:6px;font-size:13px;font-family:inherit">`;
+    container.appendChild(row);
+  }
+}
+
+function getScheduleData() {
+  const rows = document.querySelectorAll('#ns-schedule-rows .schedule-row');
+  const schedule = [];
+  rows.forEach((row, i) => {
+    schedule.push({
+      period: i + 1,
+      name: row.querySelector('.sch-name')?.value.trim() || '',
+      email: row.querySelector('.sch-email')?.value.trim() || ''
+    });
+  });
+  return schedule;
+}
+
+// ── SEND DAILY SHEET ──
+
+let pendingMailtos = [];
+
+async function openSendDailySheet(studentId) {
+  const student = students.find(s => s.id === studentId);
+  if (!student) return;
+  const schedule = student.periodTeachers || [];
+  const hasTeachers = schedule.some(t => t.email);
+  if (!hasTeachers) {
+    showToast('No period teacher emails saved. Edit this student to add the class schedule.', 'error');
+    return;
+  }
+  document.getElementById('send-sheet-student-name').textContent = student.name;
+  const today = new Date();
+  const dateKey = today.toISOString().split('T')[0];
+  const teacherName = userProfile?.name || 'Your Teacher';
+  const appUrl = window.location.origin;
+  pendingMailtos = [];
+  const listEl = document.getElementById('send-sheet-teacher-list');
+  listEl.innerHTML = '<div style="text-align:center;color:var(--ink3);padding:16px">Generating links...</div>';
+  openModal('modal-send-sheet');
+
+  const tokens = {};
+  await Promise.all(schedule.filter(t => t.email).map(async (t) => {
+    const token = `${studentId.slice(-6)}_p${t.period}_${dateKey}_${Math.random().toString(36).substr(2,8)}`;
+    try {
+      await db.collection('guestTokens').doc(token).set({
+        studentId, studentName: student.name, ownerUid: currentUser.uid,
+        teacherName, period: t.period, periodTeacherName: t.name, periodTeacherEmail: t.email,
+        goals: student.goals, date: dateKey,
+        dateLabel: today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),
+        goalPct: student.goalPct, submitted: false,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      tokens[t.period] = token;
+    } catch(e) { console.error('Token error', e); }
+  }));
+
+  listEl.innerHTML = schedule.filter(t => t.email).map(t => {
+    const token = tokens[t.period];
+    const link = token ? `${appUrl}/?score=${token}` : null;
+    const subject = encodeURIComponent(`Point Sheet – ${student.name} Period ${t.period} – ${today.toLocaleDateString()}`);
+    const body = encodeURIComponent(`Hi ${t.name||'there'},\n\nPlease score ${student.name}'s behavior for Period ${t.period} today.\n\n👉 Click here: ${link}\n\nNo login needed — under 30 seconds.\n\nThank you!\n${teacherName}`);
+    const mailto = link ? `mailto:${t.email}?subject=${subject}&body=${body}` : null;
+    if (mailto) pendingMailtos.push(mailto);
+    return `
+      <div style="background:var(--bg);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px">
+        <div style="background:var(--blue);color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;flex-shrink:0">P${t.period}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500">${t.name||'Teacher'}</div>
+          <div style="font-size:12px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis">${t.email}</div>
+        </div>
+        ${link ? `
+          <button onclick="copyToClip('${link}',this)" class="btn btn-sm btn-outline" style="font-size:12px;flex-shrink:0">📋</button>
+          <a href="${mailto}" class="btn btn-sm btn-primary" style="font-size:12px;text-decoration:none;flex-shrink:0">📧</a>
+        ` : '<span style="color:var(--red);font-size:12px">Error</span>'}
+      </div>`;
+  }).join('');
+}
+
+function sendAllPeriodEmails() {
+  if (!pendingMailtos.length) return;
+  pendingMailtos.forEach((m, i) => setTimeout(() => { window.location.href = m; }, i * 700));
+  showToast(`Opening ${pendingMailtos.length} email drafts...`, 'success');
+}
+
+function copyToClip(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  }).catch(() => { showToast('Copy failed — please copy the link manually', 'error'); });
+}
+
+// ── GUEST SCORING PAGE ──
+
+async function checkGuestScoreToken() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('score');
+  if (!token) return false;
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-score').classList.add('active');
+  const contentEl = document.getElementById('score-page-content');
+  contentEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3)">Loading...</div>';
+  try {
+    const tokenSnap = await db.collection('guestTokens').doc(token).get();
+    if (!tokenSnap.exists) {
+      contentEl.innerHTML = '<div style="text-align:center;padding:40px"><p style="color:var(--red);font-weight:600">Link expired or invalid.</p><p style="color:var(--ink3);font-size:13px;margin-top:8px">Ask your case manager to send a new link.</p></div>';
+      return true;
+    }
+    const data = tokenSnap.data();
+    if (data.submitted) {
+      contentEl.innerHTML = `<div style="text-align:center;padding:40px"><div style="font-size:40px">✅</div><h2 style="margin:12px 0 8px">Already Submitted</h2><p style="color:var(--ink3)">Period ${data.period} scores for ${data.studentName} on ${data.dateLabel} are recorded.</p></div>`;
+      return true;
+    }
+    const goals = data.goals || ['Respect','Integrity','Support','Excellence'];
+    window.guestScores = {};
+    goals.forEach(g => { window.guestScores[g] = null; });
+
+    const render = () => {
+      const allScored = goals.every(g => window.guestScores[g] !== null);
+      contentEl.innerHTML = `
+        <div style="background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+            <div style="background:var(--blue);color:#fff;border-radius:6px;padding:6px 12px;font-size:13px;font-weight:700">Period ${data.period}</div>
+            <div><div style="font-size:16px;font-weight:600">${data.studentName}</div><div style="font-size:12px;color:var(--ink3)">${data.dateLabel}</div></div>
+          </div>
+          <p style="font-size:13px;color:var(--ink2);margin-bottom:16px"><strong>0</strong> = Not Met &nbsp;·&nbsp; <strong>1</strong> = Partial &nbsp;·&nbsp; <strong>2</strong> = Met</p>
+          ${goals.map(g => `
+            <div style="background:var(--bg);border-radius:8px;padding:12px 14px;margin-bottom:10px">
+              <div style="font-size:14px;font-weight:500;margin-bottom:8px">${g}</div>
+              <div style="display:flex;gap:8px">
+                ${[0,1,2].map(v => {
+                  const sel = window.guestScores[g] === v;
+                  const col = v===0?'#DC2626':v===1?'#B45309':'#15803D';
+                  const bg = v===0?'#FEF2F2':v===1?'#FFFBEB':'#F0FDF4';
+                  return `<button onclick="window.guestSetScore('${g}',${v})"
+                    style="flex:1;padding:10px;border-radius:7px;border:2px solid ${sel?col:'var(--border-md)'};background:${sel?bg:'#fff'};font-size:18px;font-weight:700;color:${sel?col:'var(--ink3)'};cursor:pointer;transition:all .12s;font-family:inherit">${v}</button>`;
+                }).join('')}
+              </div>
+            </div>`).join('')}
+        </div>
+        <button onclick="window.submitGuestSheet('${token}')" id="guest-submit-btn"
+          style="width:100%;padding:14px;background:${allScored?'#15803D':'var(--border-md)'};color:${allScored?'#fff':'var(--ink3)'};border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:${allScored?'pointer':'not-allowed'};transition:all .2s;font-family:inherit"
+          ${allScored?'':'disabled'}>${allScored?'✅ Submit Scores':'Score all categories to submit'}</button>`;
+    };
+
+    window.guestSetScore = (goal, val) => {
+      window.guestScores[goal] = val;
+      render();
+    };
+
+    window.submitGuestSheet = async (tok) => {
+      const btn = document.getElementById('guest-submit-btn');
+      if (btn) { btn.textContent = 'Submitting...'; btn.disabled = true; }
+      try {
+        await db.collection('guestTokens').doc(tok).update({
+          submitted: true, scores: window.guestScores,
+          submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await db.collection('users').doc(data.ownerUid)
+          .collection('students').doc(data.studentId)
+          .collection('sheets').doc(`${data.date}_p${data.period}`).set({
+            period: data.period, date: data.date, scores: window.guestScores,
+            teacherName: data.periodTeacherName,
+            submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        contentEl.innerHTML = `
+          <div style="text-align:center;padding:40px;background:#fff;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:48px;margin-bottom:12px">✅</div>
+            <h2 style="font-size:20px;margin-bottom:8px">Scores Submitted!</h2>
+            <p style="color:var(--ink2)">${data.studentName} — Period ${data.period}</p>
+            <p style="color:var(--ink3);font-size:13px;margin-bottom:20px">${data.dateLabel}</p>
+            <div style="background:var(--bg);border-radius:8px;padding:16px;text-align:left">
+              ${goals.map(g => `<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px solid var(--border)"><span>${g}</span><strong style="color:${window.guestScores[g]===0?'#DC2626':window.guestScores[g]===1?'#B45309':'#15803D'}">${window.guestScores[g]}/2</strong></div>`).join('')}
+            </div>
+            <p style="color:var(--ink3);font-size:12px;margin-top:16px">You can close this window.</p>
+          </div>`;
+      } catch(e) {
+        if(btn) { btn.textContent = '✅ Submit Scores'; btn.disabled = false; }
+        contentEl.innerHTML += '<p style="color:var(--red);text-align:center;margin-top:12px">Submit failed. Please try again.</p>';
+      }
+    };
+    render();
+  } catch(e) {
+    contentEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--red)">Error loading. Please try again.</div>';
+  }
+  return true;
+}
 auth.onAuthStateChanged(async user => {
   hideLoading();
+  // Check for guest scoring token FIRST — period teachers don't need login
+  const isGuestScore = await checkGuestScoreToken();
+  if (isGuestScore) return;
   if (user) {
     currentUser = user;
     await loadUserProfile();
@@ -1015,6 +1289,7 @@ async function addStudent() {
       theme: themeName,    // save theme name
       trackerDays,         // 45 or 28
       trackerStart: startDate,
+      periodTeachers: getScheduleData(),  // NEW: period teacher schedule
       lastScore: null,
       lastSheetDate: null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1096,6 +1371,7 @@ function studentRowHTML(s, showDelete = false) {
         ${score !== null && score !== undefined ? `<div class="student-progress"><div class="student-progress-fill" style="width:${score}%;background:${scoreColor}"></div></div>` : ''}
       </div>
       ${showDelete ? `<button class="btn btn-sm" style="color:var(--red);border:1px solid var(--border-md);margin-left:8px" onclick="event.stopPropagation();deleteStudent('${s.id}')">✕</button>` : ''}
+      ${s.periodTeachers?.some(t=>t.email) ? `<button class="btn btn-sm btn-primary" style="font-size:11px;padding:5px 9px;margin-left:4px" onclick="event.stopPropagation();openSendDailySheet('${s.id}')">📧 Send</button>` : ''}
     </div>`;
 }
 
