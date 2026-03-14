@@ -402,7 +402,7 @@ a{color:inherit;text-decoration:none}
           <li><span class="x-mark">✗</span> <span style="color:var(--ink3)">Admin dashboard</span></li>
           <li><span class="x-mark">✗</span> <span style="color:var(--ink3)">School-wide reports</span></li>
         </ul>
-        <button class="btn btn-outline" style="width:100%" onclick="showPage('auth','signup')">Buy Now — $97</button>
+        <button class="btn btn-outline" style="width:100%" onclick="window.open('https://samscholar.gumroad.com/l/jfwth','_blank')">Buy Now — $97</button>
       </div>
       <div class="price-card featured">
         <p class="price-plan">School License</p>
@@ -418,7 +418,7 @@ a{color:inherit;text-decoration:none}
           <li><span class="check">✓</span> Parent email sharing</li>
           <li><span class="check">✓</span> Full progress history &amp; trends</li>
         </ul>
-        <button class="btn btn-primary" style="width:100%" onclick="contactSales('school')">Get School License — $897/yr</button>
+        <button class="btn btn-primary" style="width:100%" onclick="window.open('https://samscholar.gumroad.com/l/isztn','_blank')">Get School License — $897/yr</button>
       </div>
       <div class="price-card">
         <p class="price-plan">District License</p>
@@ -434,7 +434,7 @@ a{color:inherit;text-decoration:none}
           <li><span class="check">✓</span> Priority support</li>
           <li><span class="check">✓</span> +$200/school after 5</li>
         </ul>
-        <button class="btn btn-outline" style="width:100%" onclick="contactSales('district')">Get District License — $1,497/yr</button>
+        <button class="btn btn-outline" style="width:100%" onclick="window.open('https://samscholar.gumroad.com/l/ynssq','_blank')">Get District License — $1,497/yr</button>
       </div>
     </div>
   </section>
@@ -450,7 +450,7 @@ a{color:inherit;text-decoration:none}
           <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
           <a href="#" onclick="showPage('auth','login')">Log In</a>
-          <a href="mailto:hello@samsedu.com">Contact</a>
+          <a href="mailto:samsforschools@gmail.com">Contact</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -1338,7 +1338,7 @@ function contactSales(plan) {
   const prices = { school: '$897/year', district: '$1,497/year' };
   const subject = encodeURIComponent(`PointSheet Pro ${plan.charAt(0).toUpperCase()+plan.slice(1)} License Inquiry`);
   const body = encodeURIComponent(`Hi SAMS EDU Solutions,\n\nI'm interested in the ${plan} license (${prices[plan]}) for PointSheet Pro.\n\nMy name: ${userProfile?.name || ''}\nSchool: ${userProfile?.school || ''}\nEmail: ${currentUser?.email || ''}\n\nPlease send me more information.\n\nThank you!`);
-  window.open(`mailto:hello@samsedu.com?subject=${subject}&body=${body}`);
+  window.open(`mailto:samsforschools@gmail.com?subject=${subject}&body=${body}`);
 }
 
 // ── HELPERS ──
