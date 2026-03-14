@@ -5,31 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PointSheet Pro — Digital Behavior Tracking for Schools</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
 <style>
 :root {
-  --bg: #F8F7F4;
-  --white: #FFFFFF;
-  --ink: #18181B;
-  --ink2: #52525B;
-  --ink3: #A1A1AA;
-  --blue: #1D4ED8;
-  --blue-light: #EFF6FF;
-  --blue-mid: #3B82F6;
-  --green: #15803D;
-  --green-light: #F0FDF4;
-  --amber: #B45309;
-  --amber-light: #FFFBEB;
-  --red: #DC2626;
-  --red-light: #FEF2F2;
-  --border: rgba(24,24,27,0.08);
-  --border-md: rgba(24,24,27,0.14);
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --shadow: 0 1px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.04);
-  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04);
-  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --serif: 'Fraunces', Georgia, serif;
+  --bg:#F8F7F4;--white:#fff;--ink:#18181B;--ink2:#52525B;--ink3:#A1A1AA;
+  --blue:#1D4ED8;--blue-light:#EFF6FF;--blue-mid:#3B82F6;
+  --green:#15803D;--green-light:#F0FDF4;
+  --amber:#B45309;--amber-light:#FFFBEB;
+  --red:#DC2626;--red-light:#FEF2F2;
+  --border:rgba(24,24,27,0.08);--border-md:rgba(24,24,27,0.14);
+  --radius-sm:6px;--radius:10px;--radius-lg:14px;
+  --shadow:0 1px 8px rgba(0,0,0,0.06),0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-lg:0 8px 40px rgba(0,0,0,0.12),0 0 0 1px rgba(0,0,0,0.04);
+  --font:'Plus Jakarta Sans',system-ui,sans-serif;
+  --serif:'Fraunces',Georgia,serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
@@ -38,55 +32,58 @@ button{font-family:var(--font);cursor:pointer;border:none;background:none}
 input,select,textarea{font-family:var(--font)}
 a{color:inherit;text-decoration:none}
 .hide{display:none!important}
- 
-/* ── PAGES ── */
-.page{display:none}
-.page.active{display:block}
- 
-/* ── SHARED BUTTONS ── */
+.page{display:none}.page.active{display:block}
+
+/* BUTTONS */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:500;padding:10px 20px;border-radius:var(--radius-sm);transition:all .15s;cursor:pointer;border:none}
 .btn-primary{background:var(--blue);color:#fff}
-.btn-primary:hover{background:#1e40af;transform:translateY(-1px);box-shadow:0 4px 16px rgba(29,78,216,0.35)}
+.btn-primary:hover{background:#1e40af;transform:translateY(-1px);box-shadow:0 4px 16px rgba(29,78,216,.35)}
 .btn-primary:active{transform:scale(0.98)}
 .btn-outline{background:transparent;color:var(--ink);border:1px solid var(--border-md)}
-.btn-outline:hover{background:var(--white);border-color:rgba(24,24,27,0.25)}
+.btn-outline:hover{background:var(--white)}
 .btn-lg{font-size:16px;padding:13px 28px;border-radius:var(--radius)}
 .btn-sm{font-size:13px;padding:7px 14px}
- 
-/* ────────────────────────────────────────
-   LANDING PAGE
-──────────────────────────────────────── */
-/* NAV */
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#b91c1c}
+
+/* LOADING OVERLAY */
+#loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px}
+.spinner{width:36px;height:36px;border:3px solid var(--border-md);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{font-size:14px;color:var(--ink2)}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 20px;border-radius:var(--radius);font-size:14px;z-index:9000;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.success{background:var(--green)}
+#toast.error{background:var(--red)}
+
+/* ── LANDING ── */
 #nav{position:sticky;top:0;z-index:200;background:rgba(248,247,244,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
 .nav-wrap{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:62px;gap:16px}
 .logo{font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-.02em;margin-right:auto}
 .logo span{color:var(--blue)}
 .nav-link{font-size:14px;color:var(--ink2);padding:6px 12px;border-radius:6px;transition:background .15s}
 .nav-link:hover{background:rgba(0,0,0,0.05);color:var(--ink)}
- 
-/* HERO */
+
 .hero{padding:72px 24px 80px;text-align:center;position:relative;overflow:hidden}
 .hero-glow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(29,78,216,.08) 0%,transparent 70%);pointer-events:none}
 .hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:var(--blue-light);color:var(--blue);padding:5px 14px;border-radius:20px;margin-bottom:24px}
-.hero h1{font-family:var(--serif);font-size:clamp(38px,5.5vw,68px);font-weight:600;line-height:1.06;letter-spacing:-.025em;max-width:800px;margin:0 auto 20px;color:var(--ink)}
+.hero h1{font-family:var(--serif);font-size:clamp(38px,5.5vw,68px);font-weight:600;line-height:1.06;letter-spacing:-.025em;max-width:800px;margin:0 auto 20px}
 .hero h1 em{font-style:italic;color:var(--blue)}
 .hero-sub{font-size:18px;color:var(--ink2);font-weight:300;max-width:540px;margin:0 auto 36px;line-height:1.65}
 .hero-cta{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .hero-note{font-size:13px;color:var(--ink3)}
 .hero-note strong{color:var(--ink2);font-weight:500}
- 
-/* DEMO SHELL */
 .demo-shell{max-width:900px;margin:52px auto 0;background:var(--white);border-radius:16px;box-shadow:var(--shadow-lg);border:1px solid var(--border);overflow:hidden}
 .demo-titlebar{background:#F1F0ED;padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
 .dot{width:11px;height:11px;border-radius:50%}
 .dot-r{background:#FF6058}.dot-y{background:#FFBC2D}.dot-g{background:#2BC640}
 .demo-url{flex:1;text-align:center;font-size:12px;color:var(--ink3);background:#fff;border:1px solid var(--border);padding:4px 16px;border-radius:5px;max-width:320px;margin:0 auto}
- 
-/* SOCIAL PROOF */
 .social-strip{background:var(--blue);padding:14px 24px;text-align:center}
-.social-strip p{font-size:14px;color:rgba(255,255,255,.85);letter-spacing:.01em}
+.social-strip p{font-size:14px;color:rgba(255,255,255,.85)}
 .social-strip strong{color:#fff}
- 
+
 /* FEATURES */
 .features{padding:80px 24px;max-width:1100px;margin:0 auto}
 .section-label{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin-bottom:14px}
@@ -96,27 +93,25 @@ a{color:inherit;text-decoration:none}
 .feat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:box-shadow .2s,transform .2s}
 .feat-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
 .feat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:16px}
-.feat-icon.blue{background:var(--blue-light)}
-.feat-icon.green{background:var(--green-light)}
-.feat-icon.amber{background:var(--amber-light)}
+.feat-icon.blue{background:var(--blue-light)}.feat-icon.green{background:var(--green-light)}.feat-icon.amber{background:var(--amber-light)}
 .feat-card h3{font-size:16px;font-weight:600;margin-bottom:8px}
 .feat-card p{font-size:14px;color:var(--ink2);line-height:1.6}
- 
-/* HOW IT WORKS */
+
+/* HOW */
 .how{padding:80px 24px;background:var(--white);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 .how-inner{max-width:1100px;margin:0 auto}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:32px;margin-top:48px;position:relative}
-.step{text-align:center;position:relative}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:32px;margin-top:48px}
+.step{text-align:center}
 .step-num{width:48px;height:48px;border-radius:50%;background:var(--blue);color:#fff;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 .step h3{font-size:15px;font-weight:600;margin-bottom:8px}
 .step p{font-size:14px;color:var(--ink2);line-height:1.6}
- 
+
 /* PRICING */
 .pricing{padding:80px 24px;max-width:1100px;margin:0 auto}
 .price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:48px}
 .price-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px}
 .price-card.featured{border:2px solid var(--blue);position:relative;overflow:hidden}
-.price-card.featured::before{content:'Most Popular';position:absolute;top:16px;right:-24px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;padding:4px 32px;transform:rotate(45deg);transform-origin:center;letter-spacing:.04em}
+.price-card.featured::before{content:'Most Popular';position:absolute;top:16px;right:-24px;background:var(--blue);color:#fff;font-size:11px;font-weight:600;padding:4px 32px;transform:rotate(45deg);letter-spacing:.04em}
 .price-plan{font-size:13px;font-weight:600;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
 .price-amount{display:flex;align-items:baseline;gap:4px;margin-bottom:4px}
 .price-amount span:first-child{font-size:40px;font-weight:700;letter-spacing:-.03em}
@@ -127,7 +122,7 @@ a{color:inherit;text-decoration:none}
 .price-features li{font-size:14px;color:var(--ink2);display:flex;align-items:center;gap:9px}
 .check{color:var(--green);font-size:16px;font-weight:700;flex-shrink:0}
 .x-mark{color:var(--ink3);font-size:14px;flex-shrink:0}
- 
+
 /* FOOTER */
 .footer{background:var(--ink);padding:48px 24px 32px;color:rgba(255,255,255,.6)}
 .footer-inner{max-width:1100px;margin:0 auto}
@@ -139,15 +134,30 @@ a{color:inherit;text-decoration:none}
 .footer-links a{font-size:13px;color:rgba(255,255,255,.5);transition:color .15s}
 .footer-links a:hover{color:#fff}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.08);padding-top:24px;font-size:12px;color:rgba(255,255,255,.3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-.footer-bottom strong{color:rgba(255,255,255,.5)}
- 
-/* ────────────────────────────────────────
-   APP LAYOUT
-──────────────────────────────────────── */
+
+/* ── AUTH ── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.auth-box{width:100%;max-width:420px}
+.auth-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);padding:28px;box-shadow:var(--shadow)}
+.auth-logo{font-family:var(--serif);font-size:26px;font-weight:600;text-align:center;margin-bottom:6px}
+.auth-subtitle{font-size:14px;color:var(--ink2);text-align:center;margin-bottom:24px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:var(--ink2);margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid var(--border-md);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);background:var(--white);transition:border .15s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;font-size:13px;color:var(--ink3)}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-google{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:10px;border:1px solid var(--border-md);border-radius:var(--radius-sm);background:var(--white);font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;transition:background .15s}
+.btn-google:hover{background:var(--bg)}
+.auth-switch{text-align:center;font-size:13px;color:var(--ink3);margin-top:16px}
+.auth-switch a{color:var(--blue);cursor:pointer}
+.plan-tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--blue-light);color:var(--blue);margin-bottom:16px}
+.plan-limit-warning{background:var(--amber-light);border:1px solid #FDE68A;border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--amber);margin-bottom:16px}
+
+/* ── APP SHELL ── */
 .app-shell{display:flex;min-height:100vh;background:var(--bg)}
 .app-sidebar{width:220px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
 .sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:12px}
-.sidebar-logo .logo{font-size:18px}
 .sidebar-section{padding:8px 12px 4px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
 .sidebar-link{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:14px;color:var(--ink2);border-radius:7px;margin:2px 8px;transition:background .15s,color .15s;cursor:pointer}
 .sidebar-link:hover{background:var(--bg);color:var(--ink)}
@@ -158,72 +168,56 @@ a{color:inherit;text-decoration:none}
 .user-chip{display:flex;align-items:center;gap:10px}
 .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
 .user-info p{font-size:13px;font-weight:500;color:var(--ink)}
-.user-info small{font-size:11px;color:var(--ink3)}
+.user-info small{font-size:11px;color:var(--blue)}
+.plan-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:2px}
+.plan-badge.individual{background:var(--blue-light);color:var(--blue)}
+.plan-badge.school{background:var(--green-light);color:var(--green)}
+.plan-badge.district{background:#F3E8FF;color:#7C3AED}
 .app-main{flex:1;overflow-y:auto;padding:32px}
 .app-header{margin-bottom:28px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.app-header h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.app-header h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.02em}
 .app-header p{font-size:14px;color:var(--ink2);margin-top:3px}
- 
+
 /* STAT CARDS */
 .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
 .stat-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
 .stat-label{font-size:12px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
-.stat-value{font-size:26px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.stat-value{font-size:26px;font-weight:700;letter-spacing:-.02em}
 .stat-sub{font-size:12px;color:var(--ink3);margin-top:3px}
 .stat-card.green .stat-value{color:var(--green)}
 .stat-card.blue .stat-value{color:var(--blue)}
 .stat-card.amber .stat-value{color:var(--amber)}
- 
-/* STUDENT LIST */
+
+/* CARDS */
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
 .card-header{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap}
-.card-title{font-size:16px;font-weight:600;color:var(--ink)}
+.card-title{font-size:16px;font-weight:600}
+
+/* STUDENT LIST */
 .student-row{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
 .student-row:last-child{border-bottom:none}
 .student-row:hover{background:var(--bg)}
 .student-avatar{width:36px;height:36px;border-radius:50%;font-size:13px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.student-name{font-size:14px;font-weight:500;color:var(--ink)}
+.student-name{font-size:14px;font-weight:500}
 .student-meta{font-size:12px;color:var(--ink3)}
 .student-score{margin-left:auto;text-align:right}
 .score-pct{font-size:16px;font-weight:700;letter-spacing:-.01em}
-.score-pct.high{color:var(--green)}
-.score-pct.mid{color:var(--amber)}
-.score-pct.low{color:var(--red)}
 .score-date{font-size:11px;color:var(--ink3)}
 .student-progress{height:4px;border-radius:2px;background:var(--border);overflow:hidden;width:80px;margin-top:4px}
 .student-progress-fill{height:100%;border-radius:2px}
- 
-/* ────────────────────────────────────────
-   POINT SHEET
-──────────────────────────────────────── */
+
+/* POINT SHEET */
 .sheet-wrap{max-width:960px}
-.sheet-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
 .meta-field label{font-size:12px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:5px}
 .meta-field input,.meta-field select{width:100%;padding:9px 12px;border:1px solid var(--border-md);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);background:var(--white);transition:border .15s}
 .meta-field input:focus,.meta-field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
- 
-/* GOAL SETUP */
-.goals-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.goals-bar h3{font-size:15px;font-weight:600}
-.goal-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-.goal-item{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px}
-.goal-color{width:12px;height:12px;border-radius:3px;flex-shrink:0}
-.goal-name-input{flex:1;border:none;font-size:14px;color:var(--ink);background:transparent}
-.goal-name-input:focus{outline:none}
-.goal-del{color:var(--ink3);font-size:18px;cursor:pointer;padding:0 4px;transition:color .15s}
-.goal-del:hover{color:var(--red)}
- 
-/* POINT TABLE */
 .point-table-wrap{overflow-x:auto;margin-bottom:20px}
 .point-table{width:100%;border-collapse:collapse;min-width:580px}
 .point-table th{font-size:12px;font-weight:600;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;text-align:center;border-bottom:2px solid var(--border-md);background:var(--bg);white-space:nowrap}
 .point-table th.goal-th{text-align:left}
 .point-table td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
-.period-header{font-size:13px;font-weight:600;color:var(--ink);text-align:center;background:var(--blue-light)}
-.goal-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--ink);min-width:140px}
+.goal-label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;min-width:140px}
 .goal-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
- 
-/* POINT BUTTONS */
 .point-cell{text-align:center}
 .point-btns{display:inline-flex;gap:3px}
 .pt-btn{width:32px;height:32px;border-radius:5px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .12s;display:flex;align-items:center;justify-content:center}
@@ -234,226 +228,166 @@ a{color:inherit;text-decoration:none}
 .pt-btn.active.p1{background:#D97706;color:#fff;border-color:#D97706}
 .pt-btn.active.p2{background:#16A34A;color:#fff;border-color:#16A34A}
 .pt-btn:hover{transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,.12)}
-.period-total-cell{font-size:15px;font-weight:700;text-align:center;letter-spacing:-.01em}
-.na-toggle{font-size:11px;color:var(--ink3);cursor:pointer;padding:4px;border-radius:4px;transition:background .15s}
-.na-toggle:hover{background:var(--bg);color:var(--ink)}
- 
-/* TOTALS ROW */
-.totals-row td{background:var(--bg);font-weight:600;padding:12px 12px}
+.period-total-cell{font-size:15px;font-weight:700;text-align:center}
+.totals-row td{background:var(--bg);font-weight:600;padding:12px}
 .total-bar{height:8px;border-radius:4px;background:var(--border);overflow:hidden;margin-top:4px;min-width:60px}
 .total-bar-fill{height:100%;border-radius:4px;transition:width .4s}
- 
-/* COMMENTS */
-.comments-area{width:100%;padding:12px;border:1px solid var(--border-md);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);resize:vertical;min-height:80px;line-height:1.5;transition:border .15s}
-.comments-area:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
- 
-/* SUMMARY BADGE */
 .summary-bar{display:flex;align-items:center;gap:16px;background:var(--bg);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;flex-wrap:wrap}
 .summary-big{font-size:36px;font-weight:800;letter-spacing:-.03em}
-.summary-big.high{color:var(--green)}
-.summary-big.mid{color:var(--amber)}
-.summary-big.low{color:var(--red)}
+.summary-big.high{color:var(--green)}.summary-big.mid{color:var(--amber)}.summary-big.low{color:var(--red)}
 .summary-label{font-size:13px;color:var(--ink2)}
 .summary-goal{font-size:12px;color:var(--ink3);margin-top:2px}
 .progress-bar-lg{flex:1;height:14px;background:var(--border);border-radius:7px;overflow:hidden;min-width:120px}
 .progress-bar-fill{height:100%;border-radius:7px;transition:width .5s ease}
- 
-/* PRINT STYLES */
+.comments-area{width:100%;padding:12px;border:1px solid var(--border-md);border-radius:var(--radius-sm);font-size:14px;color:var(--ink);resize:vertical;min-height:80px;line-height:1.5;transition:border .15s}
+.comments-area:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:520px;overflow:hidden;max-height:90vh;overflow-y:auto}
+.modal-header{padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white)}
+.modal-header h2{font-size:18px;font-weight:600}
+.modal-close{font-size:20px;color:var(--ink3);cursor:pointer;padding:4px;border-radius:4px;transition:background .15s}
+.modal-close:hover{background:var(--bg);color:var(--ink)}
+.modal-body{padding:24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:var(--white)}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.03em}
+.tag-green{background:var(--green-light);color:var(--green)}
+.tag-blue{background:var(--blue-light);color:var(--blue)}
+.tag-amber{background:var(--amber-light);color:var(--amber)}
+.tag-red{background:var(--red-light);color:var(--red)}
+
+/* UPGRADE WALL */
+.upgrade-wall{text-align:center;padding:48px 24px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.upgrade-wall h2{font-family:var(--serif);font-size:24px;font-weight:600;margin-bottom:12px}
+.upgrade-wall p{font-size:15px;color:var(--ink2);max-width:400px;margin:0 auto 24px}
+
+/* PRINT */
 @media print {
   #nav,.app-sidebar,.no-print{display:none!important}
   .app-main{padding:0}
   .sheet-wrap{max-width:100%}
   .pt-btn.active{print-color-adjust:exact;-webkit-print-color-adjust:exact}
-  body{background:#fff;color:#000}
+  body{background:#fff}
 }
- 
+
 /* RESPONSIVE */
 @media(max-width:768px){
   .app-sidebar{display:none}
   .app-main{padding:16px}
   .feat-grid,.price-grid,.steps{grid-template-columns:1fr}
 }
- 
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal-box{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:520px;overflow:hidden}
-.modal-header{padding:22px 24px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-header h2{font-size:18px;font-weight:600}
-.modal-close{font-size:20px;color:var(--ink3);cursor:pointer;padding:4px;border-radius:4px;transition:background .15s}
-.modal-close:hover{background:var(--bg);color:var(--ink)}
-.modal-body{padding:24px}
-.form-group{margin-bottom:16px}
-.form-group label{display:block;font-size:13px;font-weight:500;color:var(--ink2);margin-bottom:6px}
-.form-group input,.form-group select{width:100%;padding:10px 12px;border:1px solid var(--border-md);border-radius:var(--radius-sm);font-size:14px;color:var(--ink)}
-.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(29,78,216,.1)}
-.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
- 
-/* STRIPE PLACEHOLDER */
-.stripe-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);margin-top:10px}
-.stripe-badge svg{opacity:.5}
-.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;letter-spacing:.03em}
-.tag-green{background:var(--green-light);color:var(--green)}
-.tag-blue{background:var(--blue-light);color:var(--blue)}
-.tag-amber{background:var(--amber-light);color:var(--amber)}
-.tag-red{background:var(--red-light);color:var(--red)}
 </style>
 </head>
 <body>
- 
+
+<!-- Loading Overlay -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p class="load-text">Loading PointSheet Pro...</p>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
 <!-- ══════════════════════════════════════
      LANDING PAGE
 ══════════════════════════════════════ -->
-<div id="page-landing" class="page active">
- 
-  <!-- Nav -->
+<div id="page-landing" class="page">
   <nav id="nav">
     <div class="nav-wrap">
       <div class="logo">Point<span>Sheet</span> Pro</div>
       <a class="nav-link" href="#features">Features</a>
       <a class="nav-link" href="#pricing">Pricing</a>
-      <button class="btn btn-outline btn-sm" onclick="showApp('login')">Log In</button>
-      <button class="btn btn-primary btn-sm" onclick="showApp('signup')">Start Free</button>
+      <button class="btn btn-outline btn-sm" onclick="showPage('auth','login')">Log In</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('auth','signup')">Start Free</button>
     </div>
   </nav>
- 
-  <!-- Hero -->
+
   <section class="hero">
     <div class="hero-glow"></div>
     <div class="hero-badge">🎓 Built for Special Ed &amp; General Ed Teachers</div>
     <h1>Digital <em>Point Sheets</em><br>for Modern Schools</h1>
-    <p class="hero-sub">Replace paper point sheets with a real-time digital behavior tracking system. Track goals, earn points, share progress — all from any device.</p>
+    <p class="hero-sub">Replace paper point sheets with a real-time digital behavior tracking system. Track goals, earn points, share progress — from any device.</p>
     <div class="hero-cta">
-      <button class="btn btn-primary btn-lg" onclick="showApp('signup')">Start Free — No Credit Card</button>
-      <button class="btn btn-outline btn-lg" onclick="showDemo()">See Live Demo →</button>
+      <button class="btn btn-primary btn-lg" onclick="showPage('auth','signup')">Start Free — No Credit Card</button>
+      <button class="btn btn-outline btn-lg" onclick="showPage('auth','login')">Log In →</button>
     </div>
-    <p class="hero-note"><strong>Individual plan includes up to 5 students.</strong> School and District licenses available for larger teams.</p>
- 
-    <!-- Browser Demo Shell -->
+    <p class="hero-note"><strong>Individual plan: 1 teacher, up to 5 students, free to try.</strong> School &amp; District licenses available.</p>
     <div class="demo-shell">
       <div class="demo-titlebar">
         <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
         <div class="demo-url">app.pointsheetpro.com/sheet/marcus-j</div>
       </div>
-      <!-- Embedded mini preview of the point sheet -->
       <div style="padding:24px 28px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
           <div>
             <div style="font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-.02em">Marcus Johnson</div>
-            <div style="font-size:13px;color:var(--ink3);margin-top:2px">Grade 8 · Ms. Thompson · Tuesday, March 10</div>
+            <div style="font-size:13px;color:var(--ink3);margin-top:2px">Grade 8 · Ms. Thompson · March 14, 2025</div>
           </div>
           <div style="background:var(--green-light);border-radius:10px;padding:12px 18px;text-align:center">
             <div style="font-size:30px;font-weight:800;color:var(--green);letter-spacing:-.02em">88%</div>
             <div style="font-size:11px;color:#166534;font-weight:500">DAILY SCORE</div>
           </div>
         </div>
-        <!-- Mini grid preview -->
         <div style="overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;min-width:520px;font-size:13px">
-            <thead>
-              <tr>
-                <th style="text-align:left;padding:8px 10px;border-bottom:2px solid var(--border-md);color:var(--ink2);font-size:11px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap">Behavioral Goal</th>
-                <th style="padding:8px 10px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;background:var(--blue-light)">Period 1</th>
-                <th style="padding:8px 10px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;background:var(--blue-light)">Period 2</th>
-                <th style="padding:8px 10px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;background:var(--blue-light)">Period 3</th>
-                <th style="padding:8px 10px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;background:var(--blue-light)">Period 4</th>
-                <th style="padding:8px 10px;border-bottom:2px solid var(--border-md);color:var(--ink2);font-size:11px;letter-spacing:.04em;text-transform:uppercase">Total</th>
-              </tr>
-            </thead>
-            <tbody id="demo-tbody">
-            </tbody>
+            <thead><tr>
+              <th style="text-align:left;padding:8px 10px;border-bottom:2px solid var(--border-md);color:var(--ink2);font-size:11px;letter-spacing:.04em;text-transform:uppercase">Behavioral Goal</th>
+              <th style="padding:8px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;background:var(--blue-light)">P1</th>
+              <th style="padding:8px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;background:var(--blue-light)">P2</th>
+              <th style="padding:8px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;background:var(--blue-light)">P3</th>
+              <th style="padding:8px;border-bottom:2px solid var(--border-md);color:var(--blue);font-size:11px;background:var(--blue-light)">P4</th>
+              <th style="padding:8px;border-bottom:2px solid var(--border-md);color:var(--ink2);font-size:11px">Total</th>
+            </tr></thead>
+            <tbody id="demo-tbody"></tbody>
           </table>
         </div>
         <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
-          <span style="font-size:12px;padding:4px 10px;background:var(--green-light);color:var(--green);border-radius:5px;font-weight:500">✓ Stays on Task</span>
-          <span style="font-size:12px;padding:4px 10px;background:var(--blue-light);color:var(--blue);border-radius:5px;font-weight:500">📋 Auto-saved</span>
-          <span style="font-size:12px;padding:4px 10px;background:var(--amber-light);color:var(--amber);border-radius:5px;font-weight:500">📤 Parent Share</span>
+          <span style="font-size:12px;padding:4px 10px;background:var(--green-light);color:var(--green);border-radius:5px;font-weight:500">✓ Auto-saved to Firebase</span>
+          <span style="font-size:12px;padding:4px 10px;background:var(--blue-light);color:var(--blue);border-radius:5px;font-weight:500">📤 Parent Share</span>
           <span style="font-size:12px;padding:4px 10px;background:var(--bg);color:var(--ink2);border-radius:5px;font-weight:500">🖨 Print-Ready</span>
         </div>
       </div>
     </div>
   </section>
- 
-  <!-- Social strip -->
+
   <div class="social-strip">
-    <p>Trusted by special education teachers, behavior specialists, and PBIS coordinators at <strong>150+ schools</strong> nationwide</p>
+    <p>Built for special education teachers, behavior specialists, and PBIS coordinators. <strong>By SAMS EDU Solutions.</strong></p>
   </div>
- 
-  <!-- Features -->
+
   <section class="features" id="features">
     <p class="section-label">Why PointSheet Pro</p>
-    <h2 class="section-title">Everything a paper point sheet does —<br>and so much more</h2>
-    <p class="section-sub">Designed with input from special education teachers, behavior interventionists, and school psychologists.</p>
+    <h2 class="section-title">Everything paper does — and so much more</h2>
+    <p class="section-sub">Designed with special education teachers, behavior interventionists, and school psychologists.</p>
     <div class="feat-grid">
-      <div class="feat-card">
-        <div class="feat-icon blue">📋</div>
-        <h3>Fully Customizable Goals</h3>
-        <p>Set up any behavioral goals for each student — stay on task, use respectful language, follow directions, or any IEP-specific target. Up to 8 goals per sheet.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon green">📊</div>
-        <h3>Real-Time Progress Tracking</h3>
-        <p>See daily, weekly, and monthly trends for every student. Automatic percentage calculations. Color-coded indicators show progress at a glance.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon amber">📤</div>
-        <h3>Parent & Team Sharing</h3>
-        <p>Send daily score summaries to parents via email or PDF. Share with case managers, behavioral specialists, and paraprofessionals instantly.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon blue">🖨</div>
-        <h3>Print-Perfect Layout</h3>
-        <p>Every point sheet prints beautifully on a single page. Use digital OR paper — it works both ways. Great for IEP documentation and progress monitoring.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon green">📈</div>
-        <h3>IEP-Ready Reports</h3>
-        <p>Generate professional progress reports with charts and trend data. Export directly to PDF for IEP meetings, parent conferences, and behavior reviews.</p>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon amber">⚡</div>
-        <h3>Works on Any Device</h3>
-        <p>Use on Chromebooks, iPads, phones, or classroom computers. No app download needed. Teachers and paras access the same sheet simultaneously.</p>
-      </div>
+      <div class="feat-card"><div class="feat-icon blue">📋</div><h3>Customizable Goals</h3><p>Set up any behavioral goals per student — stay on task, respectful language, follow directions, or any IEP-specific target. Up to 8 goals per sheet.</p></div>
+      <div class="feat-card"><div class="feat-icon green">📊</div><h3>Real-Time Tracking</h3><p>Daily, weekly, and monthly trends for every student. Automatic percentage calculations. Color-coded indicators at a glance. Saved to Firebase instantly.</p></div>
+      <div class="feat-card"><div class="feat-icon amber">📤</div><h3>Parent &amp; Team Sharing</h3><p>Send daily score summaries to parents via email or PDF. Share with case managers, behavioral specialists, and paraprofessionals.</p></div>
+      <div class="feat-card"><div class="feat-icon blue">🖨</div><h3>Print-Perfect Layout</h3><p>Every point sheet prints beautifully on a single page. Use digital OR paper — works both ways. Great for IEP documentation.</p></div>
+      <div class="feat-card"><div class="feat-icon green">📈</div><h3>IEP-Ready Reports</h3><p>Generate progress reports with charts and trend data. Export to PDF for IEP meetings, parent conferences, and behavior reviews.</p></div>
+      <div class="feat-card"><div class="feat-icon amber">⚡</div><h3>Any Device</h3><p>Chromebooks, iPads, phones, or computers. No download needed. Teachers and paras access the same sheet simultaneously in real time.</p></div>
     </div>
   </section>
- 
-  <!-- How it works -->
-  <section class="how" id="how">
+
+  <section class="how">
     <div class="how-inner">
       <p class="section-label">How It Works</p>
       <h2 class="section-title">Up and running in 5 minutes</h2>
       <div class="steps">
-        <div class="step">
-          <div class="step-num">1</div>
-          <h3>Add Your Students</h3>
-          <p>Create student profiles, set grade level, teacher name, and goal percentage targets.</p>
-        </div>
-        <div class="step">
-          <div class="step-num">2</div>
-          <h3>Define Behavioral Goals</h3>
-          <p>Enter 3–8 goals per student. Use existing IEP goals or create your own PBIS targets.</p>
-        </div>
-        <div class="step">
-          <div class="step-num">3</div>
-          <h3>Track Points by Period</h3>
-          <p>Click 0, 1, or 2 for each goal each period. Sheet auto-calculates totals and daily percentage.</p>
-        </div>
-        <div class="step">
-          <div class="step-num">4</div>
-          <h3>Share & Report</h3>
-          <p>Email parents a daily summary, export a weekly report, or print for IEP binders.</p>
-        </div>
+        <div class="step"><div class="step-num">1</div><h3>Create Your Account</h3><p>Sign up free with email or Google. Your data is securely stored in Firebase.</p></div>
+        <div class="step"><div class="step-num">2</div><h3>Add Students &amp; Goals</h3><p>Create student profiles and enter their behavioral goals — IEP targets or your own PBIS goals.</p></div>
+        <div class="step"><div class="step-num">3</div><h3>Track Points by Period</h3><p>Click 0, 1, or 2 for each goal each period. Totals and percentages auto-calculate and save.</p></div>
+        <div class="step"><div class="step-num">4</div><h3>Share &amp; Report</h3><p>Email parents a daily summary, export a weekly report, or print for IEP binders.</p></div>
       </div>
     </div>
   </section>
- 
-  <!-- Pricing -->
+
   <section class="pricing" id="pricing">
     <p class="section-label">Simple Pricing</p>
     <h2 class="section-title">Start free. Scale with your caseload.</h2>
     <p class="section-sub">No contracts, cancel anytime. Schools and districts contact us for site licensing.</p>
     <div class="price-grid">
-      <!-- Free -->
       <div class="price-card">
         <p class="price-plan">Individual Teacher</p>
         <div class="price-amount"><span>$97</span><small>one-time</small></div>
@@ -464,13 +398,12 @@ a{color:inherit;text-decoration:none}
           <li><span class="check">✓</span> Unlimited behavioral goals</li>
           <li><span class="check">✓</span> Daily point sheets</li>
           <li><span class="check">✓</span> Print-ready layout</li>
-          <li><span class="x-mark">✗</span> <span style="color:var(--ink3)">Progress reports</span></li>
-          <li><span class="x-mark">✗</span> <span style="color:var(--ink3)">Parent email sharing</span></li>
-          <li><span class="x-mark">✗</span> <span style="color:var(--ink3)">Historical data</span></li>
+          <li><span class="check">✓</span> Firebase cloud save</li>
+          <li><span class="x-mark">✗</span> <span style="color:var(--ink3)">Admin dashboard</span></li>
+          <li><span class="x-mark">✗</span> <span style="color:var(--ink3)">School-wide reports</span></li>
         </ul>
-        <button class="btn btn-outline" style="width:100%" onclick="startCheckout('individual')">Buy Now — $97</button>
+        <button class="btn btn-outline" style="width:100%" onclick="showPage('auth','signup')">Buy Now — $97</button>
       </div>
-      <!-- Pro -->
       <div class="price-card featured">
         <p class="price-plan">School License</p>
         <div class="price-amount"><span>$897</span><small>/ year</small></div>
@@ -483,15 +416,10 @@ a{color:inherit;text-decoration:none}
           <li><span class="check">✓</span> <strong>School-wide PBIS reports</strong></li>
           <li><span class="check">✓</span> IEP-ready PDF export</li>
           <li><span class="check">✓</span> Parent email sharing</li>
-          <li><span class="check">✓</span> Full progress history & trends</li>
+          <li><span class="check">✓</span> Full progress history &amp; trends</li>
         </ul>
-        <button class="btn btn-primary" style="width:100%" onclick="startCheckout('school')">Get School License — $897/yr</button>
-        <div class="stripe-badge">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          Secure billing via Stripe
-        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="contactSales('school')">Get School License — $897/yr</button>
       </div>
-      <!-- School -->
       <div class="price-card">
         <p class="price-plan">District License</p>
         <div class="price-amount"><span>$1,497</span><small>/ yr base</small></div>
@@ -506,12 +434,11 @@ a{color:inherit;text-decoration:none}
           <li><span class="check">✓</span> Priority support</li>
           <li><span class="check">✓</span> +$200/school after 5</li>
         </ul>
-        <button class="btn btn-outline" style="width:100%" onclick="startCheckout('district')">Get District License — $1,497/yr</button>
+        <button class="btn btn-outline" style="width:100%" onclick="contactSales('district')">Get District License — $1,497/yr</button>
       </div>
     </div>
   </section>
- 
-  <!-- Footer -->
+
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-top">
@@ -522,10 +449,8 @@ a{color:inherit;text-decoration:none}
         <div class="footer-links">
           <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
-          <a href="#" onclick="showApp('login')">Log In</a>
-          <a href="/cdn-cgi/l/email-protection#85ede0e9e9eac5f5eaecebf1f6ede0e0f1f5f7eaabe6eae8">Contact</a>
-          <a href="#">Privacy</a>
-          <a href="#">Terms</a>
+          <a href="#" onclick="showPage('auth','login')">Log In</a>
+          <a href="mailto:hello@samsedu.com">Contact</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -534,57 +459,44 @@ a{color:inherit;text-decoration:none}
       </div>
     </div>
   </footer>
-</div><!-- /page-landing -->
- 
- 
+</div>
+
 <!-- ══════════════════════════════════════
-     AUTH PAGES
+     AUTH PAGE
 ══════════════════════════════════════ -->
 <div id="page-auth" class="page">
-  <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)">
-    <div style="width:100%;max-width:420px">
-      <div style="text-align:center;margin-bottom:28px">
-        <div class="logo" style="font-size:26px;margin-bottom:6px">Point<span style="color:var(--blue)">Sheet</span> Pro</div>
-        <p id="auth-subtitle" style="font-size:14px;color:var(--ink2)">Sign in to your account</p>
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div style="text-align:center;margin-bottom:24px">
+        <div class="auth-logo">Point<span style="color:var(--blue)">Sheet</span> Pro</div>
+        <p id="auth-subtitle" class="auth-subtitle">Sign in to your account</p>
       </div>
-      <div class="card" style="padding:28px">
-        <div id="auth-login">
-          <div class="form-group">
-            <label>Email address</label>
-            <input type="email" id="login-email" placeholder="you@school.edu" value="demo@school.edu">
-          </div>
-          <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="login-pass" placeholder="••••••••" value="demo1234">
-          </div>
-          <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doLogin()">Sign In</button>
-          <p style="text-align:center;font-size:13px;color:var(--ink3);margin-top:16px">Don't have an account? <a href="#" onclick="toggleAuth('signup')" style="color:var(--blue)">Sign up free</a></p>
-        </div>
-        <div id="auth-signup" style="display:none">
-          <div class="form-group">
-            <label>Full name</label>
-            <input type="text" id="signup-name" placeholder="Ms. Jane Thompson">
-          </div>
-          <div class="form-group">
-            <label>Work email</label>
-            <input type="email" id="signup-email" placeholder="you@school.edu">
-          </div>
-          <div class="form-group">
-            <label>School name</label>
-            <input type="text" id="signup-school" placeholder="Lincoln Elementary">
-          </div>
-          <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="signup-pass" placeholder="Create a password">
-          </div>
-          <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doSignup()">Create Free Account</button>
-          <p style="text-align:center;font-size:13px;color:var(--ink3);margin-top:16px">Already have an account? <a href="#" onclick="toggleAuth('login')" style="color:var(--blue)">Sign in</a></p>
-        </div>
-        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
-          <button class="btn btn-outline" style="width:100%;gap:8px" onclick="doLogin()">
-            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+      <div class="auth-card">
+        <!-- LOGIN -->
+        <div id="auth-login-form">
+          <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="you@school.edu"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••"></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doEmailLogin()">Sign In</button>
+          <div class="auth-divider">or</div>
+          <button class="btn-google" onclick="doGoogleLogin()">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
             Continue with Google
           </button>
+          <p class="auth-switch">Don't have an account? <a onclick="toggleAuth('signup')">Sign up free</a></p>
+        </div>
+        <!-- SIGNUP -->
+        <div id="auth-signup-form" style="display:none">
+          <div class="form-group"><label>Full Name</label><input type="text" id="signup-name" placeholder="Ms. Jane Thompson"></div>
+          <div class="form-group"><label>Work Email</label><input type="email" id="signup-email" placeholder="you@school.edu"></div>
+          <div class="form-group"><label>School Name</label><input type="text" id="signup-school" placeholder="Lincoln Elementary"></div>
+          <div class="form-group"><label>Password</label><input type="password" id="signup-pass" placeholder="Create a password (6+ chars)"></div>
+          <button class="btn btn-primary" style="width:100%;margin-top:4px" onclick="doEmailSignup()">Create Free Account</button>
+          <div class="auth-divider">or</div>
+          <button class="btn-google" onclick="doGoogleLogin()">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Sign up with Google
+          </button>
+          <p class="auth-switch">Already have an account? <a onclick="toggleAuth('login')">Sign in</a></p>
         </div>
       </div>
       <p style="text-align:center;font-size:12px;color:var(--ink3);margin-top:16px">
@@ -593,604 +505,774 @@ a{color:inherit;text-decoration:none}
     </div>
   </div>
 </div>
- 
+
 <!-- ══════════════════════════════════════
-     APP - DASHBOARD
+     APP
 ══════════════════════════════════════ -->
 <div id="page-app" class="page">
   <div class="app-shell">
-    <!-- Sidebar -->
     <aside class="app-sidebar">
       <div class="sidebar-logo">
-        <div class="logo">Point<span style="color:var(--blue)">Sheet</span></div>
+        <div class="logo" style="font-size:18px">Point<span style="color:var(--blue)">Sheet</span></div>
       </div>
       <span class="sidebar-section">Main</span>
-      <div class="sidebar-link active" onclick="showAppTab('dashboard')" id="nav-dashboard">
+      <div class="sidebar-link active" onclick="showTab('dashboard')" id="nav-dashboard">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </div>
-      <div class="sidebar-link" onclick="showAppTab('students')" id="nav-students">
+      <div class="sidebar-link" onclick="showTab('students')" id="nav-students">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         Students
       </div>
-      <div class="sidebar-link" onclick="openSheet(null)" id="nav-sheet">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      <div class="sidebar-link" onclick="openNewSheet()" id="nav-sheet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         New Sheet
       </div>
       <span class="sidebar-section" style="margin-top:8px">Reports</span>
-      <div class="sidebar-link" onclick="showAppTab('reports')" id="nav-reports">
+      <div class="sidebar-link" onclick="showTab('history')" id="nav-history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        Progress Reports
+        Progress History
       </div>
-      <div class="sidebar-link" onclick="showAppTab('settings')" id="nav-settings">
+      <div class="sidebar-link" onclick="showTab('settings')" id="nav-settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         Settings
       </div>
       <div class="sidebar-bottom">
         <div class="user-chip">
-          <div class="user-avatar" id="user-avatar-initials">JT</div>
+          <div class="user-avatar" id="user-avatar-initials">?</div>
           <div class="user-info">
-            <p id="sidebar-username">Ms. Thompson</p>
-            <small id="sidebar-plan" style="color:var(--blue)">School Plan</small>
+            <p id="sidebar-username">Loading...</p>
+            <span class="plan-badge individual" id="sidebar-plan-badge">Individual</span>
           </div>
         </div>
+        <button onclick="doSignOut()" style="width:100%;margin-top:12px;font-size:12px;color:var(--ink3);padding:6px;border-radius:6px;border:1px solid var(--border)" class="btn">Sign Out</button>
       </div>
     </aside>
- 
-    <!-- Main content -->
+
     <main class="app-main">
- 
-      <!-- DASHBOARD TAB -->
+
+      <!-- DASHBOARD -->
       <div id="tab-dashboard" class="app-tab">
         <div class="app-header">
           <div>
-            <h1>Good morning 👋</h1>
-            <p id="dashboard-date">Today is loading...</p>
+            <h1 id="dashboard-greeting">Good morning 👋</h1>
+            <p id="dashboard-date">Loading...</p>
           </div>
-          <button class="btn btn-primary" onclick="openSheet(null)">+ New Point Sheet</button>
+          <button class="btn btn-primary" onclick="openNewSheet()">+ New Point Sheet</button>
         </div>
+        <div id="plan-limit-bar"></div>
         <div class="stat-row">
-          <div class="stat-card blue">
-            <div class="stat-label">Active Students</div>
-            <div class="stat-value" id="stat-students">6</div>
-            <div class="stat-sub">on your caseload</div>
-          </div>
-          <div class="stat-card green">
-            <div class="stat-label">Avg Score Today</div>
-            <div class="stat-value" id="stat-avg">82%</div>
-            <div class="stat-sub">across all students</div>
-          </div>
-          <div class="stat-card amber">
-            <div class="stat-label">Sheets This Week</div>
-            <div class="stat-value" id="stat-sheets">24</div>
-            <div class="stat-sub">5 pending today</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Goal Met Rate</div>
-            <div class="stat-value">71%</div>
-            <div class="stat-sub">vs 68% last week ↑</div>
-          </div>
+          <div class="stat-card blue"><div class="stat-label">Students</div><div class="stat-value" id="stat-students">—</div><div class="stat-sub" id="stat-students-sub">on your caseload</div></div>
+          <div class="stat-card green"><div class="stat-label">Avg Score (7 days)</div><div class="stat-value" id="stat-avg">—</div><div class="stat-sub">recent average</div></div>
+          <div class="stat-card amber"><div class="stat-label">Sheets This Week</div><div class="stat-value" id="stat-sheets">—</div><div class="stat-sub">saved this week</div></div>
+          <div class="stat-card"><div class="stat-label">Plan</div><div class="stat-value" id="stat-plan" style="font-size:18px">—</div><div class="stat-sub" id="stat-plan-sub">current license</div></div>
         </div>
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">Today's Students</div>
-            <button class="btn btn-sm btn-outline" onclick="showAppTab('students')">Manage Students</button>
-          </div>
-          <div id="student-list-dashboard"></div>
+          <div class="card-header"><div class="card-title">Your Students</div><button class="btn btn-sm btn-outline" onclick="showTab('students')">Manage</button></div>
+          <div id="dashboard-student-list"><div style="padding:32px;text-align:center;color:var(--ink3)">Loading students...</div></div>
         </div>
       </div>
- 
-      <!-- STUDENTS TAB -->
+
+      <!-- STUDENTS -->
       <div id="tab-students" class="app-tab hide">
         <div class="app-header">
-          <div>
-            <h1>Students</h1>
-            <p>Manage your caseload and behavioral profiles</p>
-          </div>
-          <button class="btn btn-primary" onclick="openAddStudentModal()">+ Add Student</button>
+          <div><h1>Students</h1><p>Manage your caseload and behavioral profiles</p></div>
+          <button class="btn btn-primary" onclick="openAddStudentModal()" id="add-student-btn">+ Add Student</button>
         </div>
         <div class="card">
-          <div class="card-header">
-            <div class="card-title">All Students</div>
-            <input type="text" placeholder="Search students..." style="padding:7px 12px;border:1px solid var(--border-md);border-radius:6px;font-size:13px;width:200px" oninput="filterStudents(this.value)">
-          </div>
-          <div id="student-list-full"></div>
+          <div class="card-header"><div class="card-title">All Students</div><input type="text" placeholder="Search..." style="padding:7px 12px;border:1px solid var(--border-md);border-radius:6px;font-size:13px;width:200px" oninput="filterStudents(this.value)"></div>
+          <div id="full-student-list"></div>
         </div>
       </div>
- 
-      <!-- SHEET TAB -->
+
+      <!-- SHEET -->
       <div id="tab-sheet" class="app-tab hide">
         <div class="app-header no-print">
-          <div>
-            <h1 id="sheet-title">Daily Point Sheet</h1>
-            <p id="sheet-subtitle">Behavior tracking for the current period</p>
-          </div>
+          <div><h1 id="sheet-title">Daily Point Sheet</h1><p id="sheet-subtitle">Behavior tracking</p></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
-            <button class="btn btn-outline btn-sm" onclick="exportSheet()">📤 Share</button>
+            <button class="btn btn-outline btn-sm" onclick="shareSheet()">📤 Share</button>
             <button class="btn btn-primary btn-sm" onclick="saveSheet()">💾 Save</button>
           </div>
         </div>
         <div class="sheet-wrap" id="sheet-content"></div>
       </div>
- 
-      <!-- REPORTS TAB -->
-      <div id="tab-reports" class="app-tab hide">
-        <div class="app-header">
-          <div><h1>Progress Reports</h1><p>Generate IEP-ready reports with trend data</p></div>
-          <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
-        </div>
-        <div class="card" style="padding:32px;text-align:center">
-          <div style="font-size:48px;margin-bottom:16px">📈</div>
-          <h3 style="font-size:18px;font-weight:600;margin-bottom:8px">Progress Reports</h3>
-          <p style="font-size:14px;color:var(--ink2);max-width:400px;margin:0 auto 24px">Select a student and date range to generate an IEP-ready progress report with trend charts.</p>
-          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-            <select style="padding:9px 14px;border:1px solid var(--border-md);border-radius:6px;font-size:14px;min-width:180px">
-              <option>Select student...</option>
-              <option>Marcus Johnson</option>
-              <option>Aaliyah Davis</option>
-              <option>Tyler Brown</option>
-            </select>
-            <select style="padding:9px 14px;border:1px solid var(--border-md);border-radius:6px;font-size:14px">
-              <option>Last 2 weeks</option>
-              <option>Last month</option>
-              <option>This quarter</option>
-              <option>Custom range</option>
-            </select>
-            <button class="btn btn-primary" onclick="generateReport()">Generate PDF</button>
-          </div>
-        </div>
-        <!-- Simulated chart area -->
-        <div class="card" style="margin-top:20px;padding:24px">
-          <div style="font-size:15px;font-weight:600;margin-bottom:20px">Weekly Trend — Marcus Johnson</div>
-          <div style="display:flex;align-items:flex-end;gap:8px;height:120px;margin-bottom:8px">
-            <div id="chart-bars" style="display:flex;align-items:flex-end;gap:8px;flex:1;height:100%"></div>
-          </div>
-        </div>
+
+      <!-- HISTORY -->
+      <div id="tab-history" class="app-tab hide">
+        <div class="app-header"><div><h1>Progress History</h1><p>Recent point sheets and trend data</p></div></div>
+        <div class="card" id="history-card"><div style="padding:32px;text-align:center;color:var(--ink3)">Loading history...</div></div>
       </div>
- 
-      <!-- SETTINGS TAB -->
+
+      <!-- SETTINGS -->
       <div id="tab-settings" class="app-tab hide">
-        <div class="app-header">
-          <div><h1>Settings</h1><p>Manage your account and billing</p></div>
-        </div>
+        <div class="app-header"><div><h1>Settings</h1><p>Account and plan details</p></div></div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
           <div class="card" style="padding:24px">
-            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px">Account Details</h3>
-            <div class="form-group"><label>Full Name</label><input type="text" value="Ms. Jane Thompson"></div>
-            <div class="form-group"><label>Email</label><input type="email" value="jthompson@school.edu"></div>
-            <div class="form-group"><label>School</label><input type="text" value="Lincoln Elementary"></div>
-            <button class="btn btn-primary btn-sm">Save Changes</button>
+            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px">Account</h3>
+            <div class="form-group"><label>Name</label><input type="text" id="settings-name" placeholder="Your name"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="settings-email" placeholder="Email" disabled style="opacity:.6"></div>
+            <div class="form-group"><label>School</label><input type="text" id="settings-school" placeholder="School name"></div>
+            <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save Changes</button>
           </div>
           <div class="card" style="padding:24px">
-            <h3 style="font-size:15px;font-weight:600;margin-bottom:4px">Subscription</h3>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
-              <span class="tag tag-blue">Pro Plan</span>
-              <span style="font-size:13px;color:var(--ink3)">$19/month</span>
-            </div>
-            <p style="font-size:14px;color:var(--ink2);margin-bottom:20px">Next billing date: April 14, 2025</p>
-            <div style="display:flex;gap:10px;flex-wrap:wrap">
-              <button class="btn btn-outline btn-sm" onclick="manageStripe()">Manage Billing</button>
-              <button class="btn btn-sm" style="color:var(--red);border:1px solid var(--border-md)">Cancel Plan</button>
-            </div>
-          </div>
-          <div class="card" style="padding:24px">
-            <h3 style="font-size:15px;font-weight:600;margin-bottom:16px">Notification Preferences</h3>
-            <div style="display:flex;flex-direction:column;gap:14px">
-              <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer"><input type="checkbox" checked style="width:16px;height:16px;accent-color:var(--blue)"> Daily summary emails to parents</label>
-              <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer"><input type="checkbox" checked style="width:16px;height:16px;accent-color:var(--blue)"> Weekly progress reminders</label>
-              <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer"><input type="checkbox" style="width:16px;height:16px;accent-color:var(--blue)"> Goal threshold alerts (below 70%)</label>
-            </div>
+            <h3 style="font-size:15px;font-weight:600;margin-bottom:8px">Your Plan</h3>
+            <div id="plan-details-card"></div>
           </div>
         </div>
       </div>
- 
+
     </main>
   </div>
 </div>
- 
-<!-- ══════════════════════════════════════
-     MODALS
-══════════════════════════════════════ -->
+
+<!-- MODALS -->
 <div id="modal-add-student" class="modal-overlay hide">
   <div class="modal-box">
-    <div class="modal-header">
-      <h2>Add New Student</h2>
-      <span class="modal-close" onclick="closeModal('modal-add-student')">✕</span>
-    </div>
+    <div class="modal-header"><h2>Add Student</h2><span class="modal-close" onclick="closeModal('modal-add-student')">✕</span></div>
     <div class="modal-body">
       <div class="form-group"><label>Student Full Name</label><input type="text" id="ns-name" placeholder="First Last"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group"><label>Grade</label>
-          <select id="ns-grade"><option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
-        </div>
-        <div class="form-group"><label>Goal %</label><input type="number" id="ns-goal" placeholder="80" value="80" min="50" max="100"></div>
+        <div class="form-group"><label>Grade</label><select id="ns-grade"><option>K</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select></div>
+        <div class="form-group"><label>Target %</label><input type="number" id="ns-goal" value="80" min="50" max="100"></div>
       </div>
-      <div class="form-group"><label>Behavioral Goals (one per line)</label>
-        <textarea id="ns-goals" rows="5" class="comments-area" placeholder="Stays on task&#10;Follows directions&#10;Uses respectful language&#10;Completes assignments&#10;Keeps hands to self"></textarea>
-      </div>
-      <div class="form-group"><label>Number of Periods</label>
-        <select id="ns-periods"><option value="4">4 periods</option><option value="5">5 periods</option><option value="6" selected>6 periods</option><option value="7">7 periods</option><option value="8">8 periods</option></select>
-      </div>
+      <div class="form-group"><label>Behavioral Goals (one per line)</label><textarea id="ns-goals" rows="5" class="comments-area" placeholder="Stays on task&#10;Follows directions&#10;Uses respectful language&#10;Completes assignments&#10;Keeps hands to self"></textarea></div>
+      <div class="form-group"><label>Number of Periods</label><select id="ns-periods"><option value="4">4 periods</option><option value="5">5 periods</option><option value="6" selected>6 periods</option><option value="7">7 periods</option><option value="8">8 periods</option></select></div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-add-student')">Cancel</button>
-      <button class="btn btn-primary" onclick="addStudent()">Add Student</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-add-student')">Cancel</button><button class="btn btn-primary" onclick="addStudent()">Add Student</button></div>
   </div>
 </div>
- 
+
 <div id="modal-share" class="modal-overlay hide">
   <div class="modal-box">
-    <div class="modal-header">
-      <h2>Share Today's Summary</h2>
-      <span class="modal-close" onclick="closeModal('modal-share')">✕</span>
-    </div>
+    <div class="modal-header"><h2>Share Summary</h2><span class="modal-close" onclick="closeModal('modal-share')">✕</span></div>
     <div class="modal-body">
       <div class="form-group"><label>Parent / Guardian Email</label><input type="email" id="share-email" placeholder="parent@email.com"></div>
-      <div style="background:var(--bg);border-radius:var(--radius);padding:16px;font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:8px" id="share-preview">
-        Loading preview...
-      </div>
+      <div style="background:var(--bg);border-radius:var(--radius);padding:16px;font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:8px" id="share-preview">Loading...</div>
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" checked style="accent-color:var(--blue)"> Attach PDF copy</label>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeModal('modal-share')">Cancel</button>
-      <button class="btn btn-primary" onclick="sendShare()">Send Summary</button>
-    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-share')">Cancel</button><button class="btn btn-primary" onclick="sendShare()">Send</button></div>
   </div>
 </div>
- 
-<!-- ══════════════════════════════════════
-     JAVASCRIPT
-══════════════════════════════════════ -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-// ── STATE ──
-const GOAL_COLORS = ['#1D4ED8','#15803D','#B45309','#DC2626','#7C3AED','#0891B2','#BE185D','#059669'];
-const AVATAR_COLORS = ['#1D4ED8','#15803D','#B45309','#7C3AED','#0891B2','#BE185D'];
- 
-let currentUser = null;
-let students = [
-  {id:'s1',name:'Marcus Johnson',grade:'8',goalPct:80,color:AVATAR_COLORS[0],periods:6,goals:['Stays on task','Follows directions','Uses respectful language','Completes work','Stays in seat'],lastScore:88},
-  {id:'s2',name:'Aaliyah Davis',grade:'6',goalPct:75,color:AVATAR_COLORS[1],periods:6,goals:['Stays on task','Follows directions','Kind to peers','Completes work'],lastScore:75},
-  {id:'s3',name:'Tyler Brown',grade:'5',goalPct:80,color:AVATAR_COLORS[2],periods:6,goals:['On task','Follows directions','Keeps hands to self','Raises hand'],lastScore:62},
-  {id:'s4',name:'Sofia Martinez',grade:'7',goalPct:85,color:AVATAR_COLORS[3],periods:6,goals:['Stays on task','Completes assignments','Respectful language','Attentive'],lastScore:91},
-  {id:'s5',name:'Jordan Lee',grade:'9',goalPct:70,color:AVATAR_COLORS[4],periods:7,goals:['On task','Follows directions','Positive peer interactions','Completes work'],lastScore:78},
-  {id:'s6',name:'Darius Williams',grade:'4',goalPct:80,color:AVATAR_COLORS[5],periods:5,goals:['Stays in seat','Uses inside voice','Raises hand','Follows directions','Keeps hands to self'],lastScore:55},
-];
- 
-let currentSheet = { studentId: null, date: '', periods: 6, goals: [], data: {}, comments: '' };
-let activeTab = 'dashboard';
- 
-// ── PAGE ROUTING ──
-function showPage(p) {
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  document.getElementById('page-' + p).classList.add('active');
-  window.scrollTo(0,0);
-}
-function showApp(mode) {
-  showPage('auth');
-  toggleAuth(mode||'login');
-}
-function showDemo() {
-  doLogin();
-}
-function toggleAuth(mode) {
-  document.getElementById('auth-login').style.display = mode==='login' ? '' : 'none';
-  document.getElementById('auth-signup').style.display = mode==='signup' ? '' : 'none';
-  document.getElementById('auth-subtitle').textContent = mode==='login' ? 'Sign in to your account' : 'Create your free account';
-}
-function doLogin() {
-  currentUser = { name: 'Ms. Thompson', school: 'Lincoln Elementary', plan: 'pro', initials: 'JT' };
-  showPage('app');
-  initApp();
-}
-function doSignup() {
-  const name = document.getElementById('signup-name').value || 'New Teacher';
-  const initials = name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  currentUser = { name, school: document.getElementById('signup-school').value || 'My School', plan: 'free', initials };
-  showPage('app');
-  initApp();
-}
- 
-// ── APP INIT ──
-function initApp() {
-  const now = new Date();
-  document.getElementById('dashboard-date').textContent = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  document.getElementById('sidebar-username').textContent = currentUser.name;
-  document.getElementById('sidebar-plan').textContent = currentUser.plan === 'pro' ? 'Pro Plan' : 'Free Plan';
-  document.getElementById('user-avatar-initials').textContent = currentUser.initials;
-  renderStudentList('student-list-dashboard');
-  renderStudentList('student-list-full');
-  renderChartBars();
-}
- 
-function getScoreColor(pct) {
-  if(pct >= 80) return 'high';
-  if(pct >= 65) return 'mid';
-  return 'low';
-}
-function getScoreHex(pct) {
-  if(pct >= 80) return '#15803D';
-  if(pct >= 65) return '#B45309';
-  return '#DC2626';
-}
- 
-function renderStudentList(containerId) {
-  const el = document.getElementById(containerId);
-  el.innerHTML = students.map(s => `
-    <div class="student-row" onclick="openSheet('${s.id}')">
-      <div class="student-avatar" style="background:${s.color}">${s.name.split(' ').map(w=>w[0]).join('')}</div>
-      <div style="flex:1">
-        <div class="student-name">${s.name}</div>
-        <div class="student-meta">Grade ${s.grade} · ${s.goals.length} goals · Target: ${s.goalPct}%</div>
-      </div>
-      <div class="student-score">
-        <div class="score-pct ${getScoreColor(s.lastScore)}" style="color:${getScoreHex(s.lastScore)}">${s.lastScore}%</div>
-        <div class="score-date">Today</div>
-        <div class="student-progress">
-          <div class="student-progress-fill" style="width:${s.lastScore}%;background:${getScoreHex(s.lastScore)}"></div>
+
+<div id="modal-upgrade" class="modal-overlay hide">
+  <div class="modal-box">
+    <div class="modal-header"><h2>Upgrade Your Plan</h2><span class="modal-close" onclick="closeModal('modal-upgrade')">✕</span></div>
+    <div class="modal-body">
+      <p style="font-size:15px;color:var(--ink2);margin-bottom:24px" id="upgrade-message">You've reached your plan limit.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="border:1px solid var(--border-md);border-radius:var(--radius);padding:16px;cursor:pointer" onclick="contactSales('school')" class="feat-card" style="margin:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:15px">School License</strong><span style="font-size:18px;font-weight:700;color:var(--blue)">$897/yr</span></div>
+          <p style="font-size:13px;color:var(--ink2)">Up to 30 teachers · Admin dashboard · School-wide PBIS reports · Unlimited students</p>
+        </div>
+        <div style="border:1px solid var(--border-md);border-radius:var(--radius);padding:16px;cursor:pointer" onclick="contactSales('district')">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="font-size:15px">District License</strong><span style="font-size:18px;font-weight:700;color:var(--blue)">$1,497/yr</span></div>
+          <p style="font-size:13px;color:var(--ink2)">Up to 5 schools · District reporting · SSO · Dedicated onboarding</p>
         </div>
       </div>
     </div>
-  `).join('');
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal('modal-upgrade')">Maybe Later</button></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     FIREBASE + APP LOGIC
+══════════════════════════════════════ -->
+<script>
+// ── FIREBASE CONFIG ──
+const firebaseConfig = {
+  apiKey: "AIzaSyBrp9HslKnyJxy4UehOet8xhXx8oiTYCgI",
+  authDomain: "teacher-behavior-mgmt.firebaseapp.com",
+  projectId: "teacher-behavior-mgmt",
+  storageBucket: "teacher-behavior-mgmt.firebasestorage.app",
+  messagingSenderId: "829143299196",
+  appId: "1:829143299196:web:f2bcd8d2b646a947d145f9"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ── PLAN LIMITS ──
+const PLAN_LIMITS = {
+  individual: { students: 5, label: 'Individual', teachers: 1 },
+  school:     { students: Infinity, label: 'School', teachers: 30 },
+  district:   { students: Infinity, label: 'District', teachers: Infinity }
+};
+
+// ── STATE ──
+let currentUser = null;
+let userProfile = null;
+let students = [];
+let currentSheet = null;
+
+const GOAL_COLORS = ['#1D4ED8','#15803D','#B45309','#DC2626','#7C3AED','#0891B2','#BE185D','#059669'];
+const AVATAR_COLORS = ['#1D4ED8','#15803D','#B45309','#7C3AED','#0891B2','#BE185D'];
+
+// ── INIT ──
+auth.onAuthStateChanged(async user => {
+  hideLoading();
+  if (user) {
+    currentUser = user;
+    await loadUserProfile();
+    showPage('app');
+    initApp();
+  } else {
+    showPage('landing');
+  }
+});
+
+function hideLoading() {
+  document.getElementById('loading-overlay').style.display = 'none';
 }
- 
+
+// ── PAGE ROUTING ──
+function showPage(p, authMode) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  window.scrollTo(0, 0);
+  if (p === 'auth' && authMode) toggleAuth(authMode);
+}
+
+function toggleAuth(mode) {
+  const isLogin = mode === 'login';
+  document.getElementById('auth-login-form').style.display = isLogin ? '' : 'none';
+  document.getElementById('auth-signup-form').style.display = isLogin ? 'none' : '';
+  document.getElementById('auth-subtitle').textContent = isLogin ? 'Sign in to your account' : 'Create your free account';
+}
+
+// ── FIREBASE AUTH ──
+async function doGoogleLogin() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    // Create profile if new user
+    const profileRef = db.collection('users').doc(user.uid);
+    const snap = await profileRef.get();
+    if (!snap.exists) {
+      await profileRef.set({
+        name: user.displayName || '',
+        email: user.email,
+        school: '',
+        plan: 'individual',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    showToast('Welcome, ' + (user.displayName || 'Teacher') + '! 👋', 'success');
+  } catch(e) {
+    showToast('Sign in failed: ' + e.message, 'error');
+  }
+}
+
+async function doEmailLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if (!email || !pass) return showToast('Please fill in all fields', 'error');
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    showToast('Welcome back!', 'success');
+  } catch(e) {
+    showToast('Login failed: ' + (e.code === 'auth/wrong-password' ? 'Incorrect password' : e.message), 'error');
+  }
+}
+
+async function doEmailSignup() {
+  const name = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const school = document.getElementById('signup-school').value.trim();
+  const pass = document.getElementById('signup-pass').value;
+  if (!name || !email || !pass) return showToast('Please fill in all required fields', 'error');
+  if (pass.length < 6) return showToast('Password must be at least 6 characters', 'error');
+  try {
+    const result = await auth.createUserWithEmailAndPassword(email, pass);
+    await result.user.updateProfile({ displayName: name });
+    await db.collection('users').doc(result.user.uid).set({
+      name, email, school, plan: 'individual',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast('Account created! Welcome to PointSheet Pro 🎉', 'success');
+  } catch(e) {
+    showToast('Signup failed: ' + (e.code === 'auth/email-already-in-use' ? 'Email already in use' : e.message), 'error');
+  }
+}
+
+async function doSignOut() {
+  await auth.signOut();
+  students = [];
+  currentUser = null;
+  userProfile = null;
+  showPage('landing');
+  showToast('Signed out successfully');
+}
+
+// ── USER PROFILE ──
+async function loadUserProfile() {
+  const snap = await db.collection('users').doc(currentUser.uid).get();
+  if (snap.exists) {
+    userProfile = snap.data();
+  } else {
+    userProfile = { name: currentUser.displayName || '', email: currentUser.email, school: '', plan: 'individual' };
+  }
+}
+
+function getPlan() {
+  return userProfile?.plan || 'individual';
+}
+
+function getPlanLimit() {
+  return PLAN_LIMITS[getPlan()] || PLAN_LIMITS.individual;
+}
+
+// ── APP INIT ──
+async function initApp() {
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('dashboard-greeting').textContent = greeting + ' 👋';
+  document.getElementById('dashboard-date').textContent = now.toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  // Sidebar user info
+  const initials = (userProfile?.name || currentUser?.displayName || currentUser?.email || '?')
+    .split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+  document.getElementById('user-avatar-initials').textContent = initials;
+  document.getElementById('sidebar-username').textContent = userProfile?.name || currentUser?.displayName || currentUser?.email || 'Teacher';
+  const planBadge = document.getElementById('sidebar-plan-badge');
+  const plan = getPlan();
+  planBadge.textContent = getPlanLimit().label;
+  planBadge.className = 'plan-badge ' + plan;
+
+  // Settings fields
+  document.getElementById('settings-name').value = userProfile?.name || '';
+  document.getElementById('settings-email').value = userProfile?.email || currentUser?.email || '';
+  document.getElementById('settings-school').value = userProfile?.school || '';
+
+  // Plan details card
+  renderPlanDetails();
+
+  // Load students
+  await loadStudents();
+  renderDashboard();
+  renderHistory();
+}
+
+function renderPlanDetails() {
+  const plan = getPlan();
+  const limits = getPlanLimit();
+  const el = document.getElementById('plan-details-card');
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span class="plan-badge ${plan}">${limits.label} Plan</span>
+    </div>
+    <div style="font-size:14px;color:var(--ink2);margin-bottom:16px;line-height:1.6">
+      ${plan === 'individual' ? `<strong>Up to 5 students</strong> · 1 teacher account<br>One-time purchase` : ''}
+      ${plan === 'school' ? `<strong>Up to 30 teacher accounts</strong><br>Unlimited students · Admin dashboard` : ''}
+      ${plan === 'district' ? `<strong>Unlimited schools</strong><br>Full district reporting · SSO` : ''}
+    </div>
+    ${plan === 'individual' ? `
+      <div style="background:var(--blue-light);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;font-size:13px;color:var(--blue)">
+        <strong>Need more than 5 students?</strong><br>Upgrade to a School License for $897/year — up to 30 teachers, unlimited students, admin dashboard.
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="contactSales('school')">Upgrade to School License</button>
+    ` : ''}
+  `;
+}
+
+// ── STUDENTS (FIRESTORE) ──
+async function loadStudents() {
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('students').orderBy('createdAt', 'asc').get();
+    students = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('stat-students').textContent = students.length;
+    const limit = getPlanLimit();
+    document.getElementById('stat-students-sub').textContent =
+      limit.students === Infinity ? `on your caseload` : `of ${limit.students} max`;
+    document.getElementById('stat-plan').textContent = getPlanLimit().label;
+    document.getElementById('stat-plan-sub').textContent = getPlan() === 'individual' ? '1 teacher · 5 students' : 'active license';
+    renderPlanLimitBar();
+  } catch(e) {
+    console.error('Error loading students:', e);
+  }
+}
+
+function renderPlanLimitBar() {
+  const el = document.getElementById('plan-limit-bar');
+  const limit = getPlanLimit();
+  if (limit.students === Infinity) { el.innerHTML = ''; return; }
+  const pct = Math.min(100, Math.round(students.length / limit.students * 100));
+  const atLimit = students.length >= limit.students;
+  el.innerHTML = `
+    <div style="background:${atLimit ? '#FEF2F2' : 'var(--blue-light)'};border:1px solid ${atLimit ? '#FECACA' : 'var(--blue-light)'};border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:${atLimit ? 'var(--red)' : 'var(--blue)'}">
+          ${atLimit ? '⚠️ Student limit reached' : `📊 ${students.length} of ${limit.students} students used`}
+        </div>
+        <div style="height:6px;background:rgba(0,0,0,.08);border-radius:3px;margin-top:6px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${atLimit ? 'var(--red)' : 'var(--blue)'};border-radius:3px;transition:width .4s"></div>
+        </div>
+      </div>
+      ${atLimit ? `<button class="btn btn-primary btn-sm" onclick="openUpgradeModal('You have reached the 5-student limit on the Individual plan.')">Upgrade Plan</button>` : ''}
+    </div>
+  `;
+}
+
+async function addStudent() {
+  const name = document.getElementById('ns-name').value.trim();
+  if (!name) return showToast('Please enter a student name', 'error');
+  const goals = document.getElementById('ns-goals').value.trim().split('\n').filter(g => g.trim());
+  if (!goals.length) return showToast('Please enter at least one goal', 'error');
+
+  // Enforce plan limit
+  const limit = getPlanLimit();
+  if (students.length >= limit.students) {
+    closeModal('modal-add-student');
+    openUpgradeModal(`You've reached the ${limit.students}-student limit on the Individual plan. Upgrade to School License for unlimited students.`);
+    return;
+  }
+
+  try {
+    const studentData = {
+      name,
+      grade: document.getElementById('ns-grade').value,
+      goalPct: parseInt(document.getElementById('ns-goal').value) || 80,
+      color: AVATAR_COLORS[students.length % AVATAR_COLORS.length],
+      periods: parseInt(document.getElementById('ns-periods').value),
+      goals,
+      lastScore: null,
+      lastSheetDate: null,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const ref = await db.collection('users').doc(currentUser.uid).collection('students').add(studentData);
+    students.push({ id: ref.id, ...studentData });
+    closeModal('modal-add-student');
+    renderDashboard();
+    renderStudentList();
+    renderPlanLimitBar();
+    document.getElementById('stat-students').textContent = students.length;
+    showToast('✅ ' + name + ' added!', 'success');
+  } catch(e) {
+    showToast('Error adding student: ' + e.message, 'error');
+  }
+}
+
+async function deleteStudent(studentId) {
+  if (!confirm('Delete this student and all their point sheets? This cannot be undone.')) return;
+  try {
+    await db.collection('users').doc(currentUser.uid).collection('students').doc(studentId).delete();
+    students = students.filter(s => s.id !== studentId);
+    renderDashboard();
+    renderStudentList();
+    renderPlanLimitBar();
+    document.getElementById('stat-students').textContent = students.length;
+    showToast('Student removed', 'success');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const el = document.getElementById('dashboard-student-list');
+  if (!students.length) {
+    el.innerHTML = `<div style="padding:40px;text-align:center;color:var(--ink3)">
+      <div style="font-size:32px;margin-bottom:12px">👥</div>
+      <p style="font-size:15px;font-weight:500;color:var(--ink2)">No students yet</p>
+      <p style="font-size:13px;margin-bottom:16px">Add your first student to get started</p>
+      <button class="btn btn-primary btn-sm" onclick="openAddStudentModal()">+ Add First Student</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = students.map(s => studentRowHTML(s)).join('');
+}
+
+function renderStudentList() {
+  const el = document.getElementById('full-student-list');
+  if (!students.length) {
+    el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--ink3)">No students added yet.</div>';
+    return;
+  }
+  el.innerHTML = students.map(s => studentRowHTML(s, true)).join('');
+}
+
 function filterStudents(q) {
   const lower = q.toLowerCase();
   const filtered = students.filter(s => s.name.toLowerCase().includes(lower));
-  const el = document.getElementById('student-list-full');
-  el.innerHTML = filtered.map(s => `
+  const el = document.getElementById('full-student-list');
+  el.innerHTML = filtered.map(s => studentRowHTML(s, true)).join('');
+}
+
+function studentRowHTML(s, showDelete = false) {
+  const score = s.lastScore;
+  const scoreColor = score !== null && score !== undefined ? getScoreHex(score) : 'var(--ink3)';
+  const scoreText = score !== null && score !== undefined ? score + '%' : 'No data';
+  const initials = s.name.split(' ').map(w => w[0]).join('').slice(0,2);
+  return `
     <div class="student-row" onclick="openSheet('${s.id}')">
-      <div class="student-avatar" style="background:${s.color}">${s.name.split(' ').map(w=>w[0]).join('')}</div>
+      <div class="student-avatar" style="background:${s.color || '#1D4ED8'}">${initials}</div>
       <div style="flex:1">
         <div class="student-name">${s.name}</div>
-        <div class="student-meta">Grade ${s.grade} · ${s.goals.length} goals · Target: ${s.goalPct}%</div>
+        <div class="student-meta">Grade ${s.grade} · ${s.goals?.length || 0} goals · Target: ${s.goalPct}%</div>
       </div>
       <div class="student-score">
-        <div class="score-pct ${getScoreColor(s.lastScore)}" style="color:${getScoreHex(s.lastScore)}">${s.lastScore}%</div>
-        <div class="student-progress" style="margin-top:4px">
-          <div class="student-progress-fill" style="width:${s.lastScore}%;background:${getScoreHex(s.lastScore)}"></div>
-        </div>
+        <div class="score-pct" style="color:${scoreColor}">${scoreText}</div>
+        <div class="score-date">${s.lastSheetDate || 'No sheets yet'}</div>
+        ${score !== null && score !== undefined ? `<div class="student-progress"><div class="student-progress-fill" style="width:${score}%;background:${scoreColor}"></div></div>` : ''}
       </div>
-    </div>
-  `).join('');
+      ${showDelete ? `<button class="btn btn-sm" style="color:var(--red);border:1px solid var(--border-md);margin-left:8px" onclick="event.stopPropagation();deleteStudent('${s.id}')">✕</button>` : ''}
+    </div>`;
 }
- 
-// ── APP TABS ──
-function showAppTab(tab) {
-  document.querySelectorAll('.app-tab').forEach(t => t.classList.add('hide'));
-  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.remove('hide');
-  const navEl = document.getElementById('nav-' + tab);
-  if(navEl) navEl.classList.add('active');
-  activeTab = tab;
-}
- 
+
 // ── POINT SHEET ──
 function openSheet(studentId) {
-  const student = studentId ? students.find(s => s.id === studentId) : students[0];
+  const student = students.find(s => s.id === studentId);
+  if (!student) return;
   currentSheet = {
-    studentId: student.id,
-    student,
-    date: new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}),
-    periods: student.periods,
-    goals: student.goals,
-    data: {},
-    comments: ''
+    studentId, student,
+    date: new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'}),
+    dateKey: new Date().toISOString().split('T')[0],
+    periods: student.periods || 6,
+    goals: student.goals || [],
+    data: {}, comments: '', saved: false
   };
-  // init data
-  for(let p = 1; p <= student.periods; p++) {
+  for (let p = 1; p <= currentSheet.periods; p++) {
     currentSheet.data[p] = {};
-    student.goals.forEach((g,i) => { currentSheet.data[p][i] = null; });
+    currentSheet.goals.forEach((_, i) => { currentSheet.data[p][i] = null; });
   }
   document.getElementById('sheet-title').textContent = student.name + ' — Point Sheet';
-  document.getElementById('sheet-subtitle').textContent = 'Daily behavior tracking · ' + currentSheet.date;
+  document.getElementById('sheet-subtitle').textContent = currentSheet.date;
   renderSheet();
-  showAppTab('sheet');
+  showTab('sheet');
   document.getElementById('nav-sheet').classList.add('active');
 }
- 
+
+function openNewSheet() {
+  if (!students.length) {
+    showTab('students');
+    showToast('Add a student first, then open their point sheet', 'error');
+    return;
+  }
+  if (students.length === 1) { openSheet(students[0].id); return; }
+  // Show student picker
+  const el = document.getElementById('sheet-content');
+  showTab('sheet');
+  document.getElementById('sheet-title').textContent = 'Select a Student';
+  document.getElementById('sheet-subtitle').textContent = 'Choose who to track today';
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-header"><div class="card-title">Select Student</div></div>
+      ${students.map(s => `
+        <div class="student-row" onclick="openSheet('${s.id}')">
+          <div class="student-avatar" style="background:${s.color}">${s.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+          <div><div class="student-name">${s.name}</div><div class="student-meta">Grade ${s.grade} · ${s.goals?.length} goals</div></div>
+        </div>`).join('')}
+    </div>`;
+}
+
 function renderSheet() {
   const { student, date, periods, goals } = currentSheet;
-  const maxPts = goals.length * 2;
- 
-  let html = `
-    <div class="summary-bar" id="sheet-summary">
+  const pct = calcPct();
+  document.getElementById('sheet-content').innerHTML = `
+    <div class="summary-bar">
       <div>
-        <div class="summary-big ${getScoreColor(calcPct())}" id="summary-pct">${calcPct()}%</div>
+        <div class="summary-big ${getScoreColor(pct)}" id="summary-pct">${pct}%</div>
         <div class="summary-label" id="summary-pts">${calcEarned()} / ${calcPossible()} pts earned</div>
         <div class="summary-goal">Goal: ${student.goalPct}%</div>
       </div>
-      <div class="progress-bar-lg">
-        <div class="progress-bar-fill" id="summary-fill" style="width:${calcPct()}%;background:${getScoreHex(calcPct())}"></div>
-      </div>
+      <div class="progress-bar-lg"><div class="progress-bar-fill" id="summary-fill" style="width:${pct}%;background:${getScoreHex(pct)}"></div></div>
     </div>
- 
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><div class="card-title">Student Information</div></div>
       <div style="padding:18px 20px">
-        <div class="sheet-meta">
-          <div class="meta-field">
-            <label>Student</label>
-            <input type="text" value="${student.name}" readonly style="font-weight:500">
-          </div>
-          <div class="meta-field">
-            <label>Grade</label>
-            <input type="text" value="${student.grade}" readonly>
-          </div>
-          <div class="meta-field">
-            <label>Date</label>
-            <input type="text" id="sheet-date-input" value="${date}">
-          </div>
-          <div class="meta-field">
-            <label>Teacher</label>
-            <input type="text" value="${currentUser ? currentUser.name : 'Teacher'}" id="sheet-teacher">
-          </div>
-          <div class="meta-field">
-            <label>Target %</label>
-            <input type="number" value="${student.goalPct}" id="sheet-target" min="0" max="100">
-          </div>
-          <div class="meta-field">
-            <label>Status</label>
-            <select id="sheet-status">
-              <option>Full Day</option><option>Partial Day</option><option>Remote</option>
-            </select>
-          </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+          <div class="meta-field"><label>Student</label><input type="text" value="${student.name}" readonly style="font-weight:500"></div>
+          <div class="meta-field"><label>Grade</label><input type="text" value="${student.grade}" readonly></div>
+          <div class="meta-field"><label>Date</label><input type="text" value="${date}"></div>
+          <div class="meta-field"><label>Teacher</label><input type="text" value="${userProfile?.name || ''}" id="sheet-teacher"></div>
+          <div class="meta-field"><label>Target %</label><input type="number" value="${student.goalPct}" id="sheet-target" min="0" max="100"></div>
+          <div class="meta-field"><label>Status</label><select id="sheet-status"><option>Full Day</option><option>Partial Day</option><option>Remote</option></select></div>
         </div>
       </div>
     </div>
- 
     <div class="card" style="margin-bottom:20px">
       <div class="card-header"><div class="card-title">Point Grid</div><span style="font-size:12px;color:var(--ink3)">0 = Not Met · 1 = Partial · 2 = Met</span></div>
       <div class="point-table-wrap" style="padding:0 0 4px">
         <table class="point-table">
-          <thead>
-            <tr>
-              <th class="goal-th" style="min-width:160px">Behavioral Goal</th>
-              ${Array.from({length:periods},(_,i)=>`<th>P${i+1}</th>`).join('')}
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody id="point-tbody">
+          <thead><tr>
+            <th class="goal-th" style="min-width:160px">Behavioral Goal</th>
+            ${Array.from({length:periods},(_,i)=>`<th>P${i+1}</th>`).join('')}
+            <th>Total</th>
+          </tr></thead>
+          <tbody>
             ${goals.map((g,gi) => `
               <tr>
-                <td class="goal-label">
-                  <div class="goal-dot" style="background:${GOAL_COLORS[gi % GOAL_COLORS.length]}"></div>
-                  ${g}
-                </td>
+                <td class="goal-label"><div class="goal-dot" style="background:${GOAL_COLORS[gi % GOAL_COLORS.length]}"></div>${g}</td>
                 ${Array.from({length:periods},(_,pi) => `
-                  <td class="point-cell">
-                    <div class="point-btns">
-                      ${[0,1,2].map(v=>`<button class="pt-btn p${v}" onclick="setPoint(${gi},${pi+1},${v})" id="pt-${gi}-${pi+1}-${v}">${v}</button>`).join('')}
-                    </div>
-                  </td>
-                `).join('')}
+                  <td class="point-cell"><div class="point-btns">
+                    ${[0,1,2].map(v=>`<button class="pt-btn p${v}" onclick="setPoint(${gi},${pi+1},${v})" id="pt-${gi}-${pi+1}-${v}">${v}</button>`).join('')}
+                  </div></td>`).join('')}
                 <td class="period-total-cell" id="goal-total-${gi}">—</td>
-              </tr>
-            `).join('')}
+              </tr>`).join('')}
             <tr class="totals-row">
               <td style="font-size:13px;font-weight:600;color:var(--ink2)">Period Totals</td>
               ${Array.from({length:periods},(_,pi)=>`
-                <td>
-                  <div id="period-total-${pi+1}" style="font-size:15px;font-weight:700;text-align:center;color:var(--ink)">—</div>
-                  <div class="total-bar"><div id="period-bar-${pi+1}" class="total-bar-fill" style="width:0%;background:var(--blue)"></div></div>
-                </td>
-              `).join('')}
+                <td><div id="period-total-${pi+1}" style="font-size:15px;font-weight:700;text-align:center">—</div>
+                <div class="total-bar"><div id="period-bar-${pi+1}" class="total-bar-fill" style="width:0%;background:var(--blue)"></div></div></td>`).join('')}
               <td id="grand-total" style="font-size:17px;font-weight:800;text-align:center;color:var(--blue)">0</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
- 
     <div class="card" style="margin-bottom:20px;padding:18px 20px">
       <div style="font-size:14px;font-weight:600;margin-bottom:10px">Comments / Notes</div>
-      <textarea class="comments-area" id="sheet-comments" placeholder="Add teacher notes, observations, or parent communication notes here...">${currentSheet.comments}</textarea>
+      <textarea class="comments-area" id="sheet-comments" placeholder="Add teacher notes, observations, or parent communication notes..."></textarea>
     </div>
- 
     <div class="card no-print" style="padding:18px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-      <div style="font-size:13px;color:var(--ink3)">Last saved: just now</div>
+      <div style="font-size:13px;color:var(--ink3)" id="save-status">Unsaved</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print Sheet</button>
-        <button class="btn btn-outline btn-sm" onclick="exportSheet()">📤 Email to Parent</button>
-        <button class="btn btn-primary btn-sm" onclick="saveSheet()">💾 Save & Close</button>
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-outline btn-sm" onclick="shareSheet()">📤 Email Parent</button>
+        <button class="btn btn-primary btn-sm" onclick="saveSheet()">💾 Save Sheet</button>
       </div>
-    </div>
-  `;
-  document.getElementById('sheet-content').innerHTML = html;
+    </div>`;
   updateTotals();
 }
- 
-function setPoint(goalIdx, period, val) {
-  // toggle: clicking active button deselects
-  if(currentSheet.data[period][goalIdx] === val) {
-    currentSheet.data[period][goalIdx] = null;
+
+function setPoint(gi, period, val) {
+  if (currentSheet.data[period][gi] === val) {
+    currentSheet.data[period][gi] = null;
   } else {
-    currentSheet.data[period][goalIdx] = val;
+    currentSheet.data[period][gi] = val;
   }
-  // update button states
-  const { goals, periods } = currentSheet;
   [0,1,2].forEach(v => {
-    const btn = document.getElementById(`pt-${goalIdx}-${period}-${v}`);
-    if(btn) btn.classList.toggle('active', currentSheet.data[period][goalIdx] === v);
+    const btn = document.getElementById(`pt-${gi}-${period}-${v}`);
+    if (btn) btn.classList.toggle('active', currentSheet.data[period][gi] === v);
   });
   updateTotals();
 }
- 
+
 function calcEarned() {
   let total = 0;
   const { goals, periods, data } = currentSheet;
-  for(let p = 1; p <= periods; p++) {
-    goals.forEach((_,gi) => { if(data[p][gi] !== null) total += data[p][gi]; });
-  }
+  for (let p = 1; p <= periods; p++) goals.forEach((_,gi) => { if(data[p][gi] !== null) total += data[p][gi]; });
   return total;
 }
- 
 function calcPossible() {
-  const { goals, periods, data } = currentSheet;
-  let possible = 0;
-  for(let p = 1; p <= periods; p++) {
-    goals.forEach((_,gi) => { if(data[p][gi] !== null) possible += 2; else possible += 2; });
-  }
-  return possible;
+  return currentSheet.goals.length * currentSheet.periods * 2;
 }
- 
 function calcPct() {
-  const possible = calcPossible();
-  if(!possible) return 0;
-  return Math.round((calcEarned() / possible) * 100);
+  const p = calcPossible();
+  return p ? Math.round(calcEarned() / p * 100) : 0;
 }
- 
+
 function updateTotals() {
   const { goals, periods, data } = currentSheet;
- 
-  // Goal row totals
   goals.forEach((_,gi) => {
     let gt = 0, gp = 0;
-    for(let p = 1; p <= periods; p++) {
-      if(data[p][gi] !== null) { gt += data[p][gi]; gp += 2; }
-      else gp += 2;
-    }
-    const el = document.getElementById(`goal-total-${gi}`);
-    if(el) { el.textContent = `${gt}/${gp}`; el.style.color = gp ? getScoreHex(Math.round(gt/gp*100)) : 'var(--ink3)'; }
+    for(let p=1;p<=periods;p++){ if(data[p][gi]!==null){gt+=data[p][gi];gp+=2;}else gp+=2; }
+    const el=document.getElementById(`goal-total-${gi}`);
+    if(el){el.textContent=`${gt}/${gp}`;el.style.color=getScoreHex(Math.round(gt/gp*100));}
   });
- 
-  // Period column totals
-  const maxPerPeriod = goals.length * 2;
-  for(let p = 1; p <= periods; p++) {
-    let pt = 0;
-    goals.forEach((_,gi) => { if(data[p][gi] !== null) pt += data[p][gi]; });
-    const el = document.getElementById(`period-total-${p}`);
-    const bar = document.getElementById(`period-bar-${p}`);
-    if(el) { el.textContent = `${pt}/${maxPerPeriod}`; el.style.color = getScoreHex(Math.round(pt/maxPerPeriod*100)); }
-    if(bar) { bar.style.width = Math.round(pt/maxPerPeriod*100) + '%'; bar.style.background = getScoreHex(Math.round(pt/maxPerPeriod*100)); }
+  const maxPP = goals.length * 2;
+  for(let p=1;p<=periods;p++){
+    let pt=0;goals.forEach((_,gi)=>{if(data[p][gi]!==null)pt+=data[p][gi];});
+    const el=document.getElementById(`period-total-${p}`);
+    const bar=document.getElementById(`period-bar-${p}`);
+    if(el){el.textContent=`${pt}/${maxPP}`;el.style.color=getScoreHex(Math.round(pt/maxPP*100));}
+    if(bar){bar.style.width=Math.round(pt/maxPP*100)+'%';bar.style.background=getScoreHex(Math.round(pt/maxPP*100));}
   }
- 
-  // Grand total + summary
+  const pct=calcPct(), earned=calcEarned(), possible=calcPossible();
+  const sp=document.getElementById('summary-pct');if(sp){sp.textContent=pct+'%';sp.className='summary-big '+getScoreColor(pct);}
+  const spts=document.getElementById('summary-pts');if(spts)spts.textContent=`${earned} / ${possible} pts earned`;
+  const fill=document.getElementById('summary-fill');if(fill){fill.style.width=pct+'%';fill.style.background=getScoreHex(pct);}
+  const gt=document.getElementById('grand-total');if(gt){gt.textContent=earned;gt.style.color=getScoreHex(pct);}
+}
+
+async function saveSheet() {
+  const pct = calcPct();
   const earned = calcEarned();
-  const pct = calcPct();
   const possible = calcPossible();
-  const gt = document.getElementById('grand-total');
-  if(gt) { gt.textContent = earned; gt.style.color = getScoreHex(pct); }
-  const sp = document.getElementById('summary-pct');
-  if(sp) { sp.textContent = pct + '%'; sp.className = 'summary-big ' + getScoreColor(pct); }
-  const spts = document.getElementById('summary-pts');
-  if(spts) spts.textContent = `${earned} / ${possible} pts earned`;
-  const fill = document.getElementById('summary-fill');
-  if(fill) { fill.style.width = pct + '%'; fill.style.background = getScoreHex(pct); }
+  const comments = document.getElementById('sheet-comments')?.value || '';
+  try {
+    const sheetData = {
+      studentId: currentSheet.studentId,
+      studentName: currentSheet.student.name,
+      date: currentSheet.dateKey,
+      dateLabel: currentSheet.date,
+      periods: currentSheet.periods,
+      goals: currentSheet.goals,
+      data: currentSheet.data,
+      comments,
+      earned, possible, pct,
+      teacherName: document.getElementById('sheet-teacher')?.value || userProfile?.name || '',
+      status: document.getElementById('sheet-status')?.value || 'Full Day',
+      savedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    // Save sheet to Firestore
+    await db.collection('users').doc(currentUser.uid)
+      .collection('sheets').add(sheetData);
+    // Update student's last score
+    await db.collection('users').doc(currentUser.uid)
+      .collection('students').doc(currentSheet.studentId)
+      .update({ lastScore: pct, lastSheetDate: currentSheet.dateKey });
+    // Update local state
+    const s = students.find(st => st.id === currentSheet.studentId);
+    if(s){ s.lastScore = pct; s.lastSheetDate = currentSheet.dateKey; }
+    const status = document.getElementById('save-status');
+    if(status) status.textContent = '✅ Saved to Firebase';
+    currentSheet.saved = true;
+    document.getElementById('stat-sheets').textContent = '✓';
+    showToast(`✅ Sheet saved! ${pct}% — ${pct >= currentSheet.student.goalPct ? 'Goal met! 🎉' : 'Keep working toward goal'}`, 'success');
+    renderDashboard();
+  } catch(e) {
+    showToast('Error saving: ' + e.message, 'error');
+  }
 }
- 
-function saveSheet() {
-  const student = students.find(s => s.id === currentSheet.studentId);
-  if(student) student.lastScore = calcPct();
-  alert('✅ Point sheet saved! Student score updated to ' + calcPct() + '%');
-  showAppTab('dashboard');
-  renderStudentList('student-list-dashboard');
+
+// ── HISTORY ──
+async function renderHistory() {
+  try {
+    const snap = await db.collection('users').doc(currentUser.uid)
+      .collection('sheets').orderBy('savedAt','desc').limit(20).get();
+    const sheets = snap.docs.map(d => ({id: d.id, ...d.data()}));
+    const el = document.getElementById('history-card');
+    if(!sheets.length){
+      el.innerHTML='<div style="padding:32px;text-align:center;color:var(--ink3)">No point sheets saved yet. Complete and save a sheet to see history here.</div>';
+      const avg = 0;
+      document.getElementById('stat-avg').textContent = '—';
+      document.getElementById('stat-sheets').textContent = '0';
+      return;
+    }
+    // Calc avg
+    const recentScores = sheets.slice(0,10).map(s=>s.pct).filter(p=>p!==undefined);
+    const avg = recentScores.length ? Math.round(recentScores.reduce((a,b)=>a+b,0)/recentScores.length) : 0;
+    document.getElementById('stat-avg').textContent = avg + '%';
+    document.getElementById('stat-sheets').textContent = sheets.length;
+    el.innerHTML = `
+      <div class="card-header"><div class="card-title">Recent Point Sheets</div></div>
+      ${sheets.map(s=>`
+        <div class="student-row" style="cursor:default">
+          <div class="student-avatar" style="background:${getScoreHex(s.pct)};font-size:12px">${s.pct}%</div>
+          <div style="flex:1">
+            <div class="student-name">${s.studentName}</div>
+            <div class="student-meta">${s.dateLabel || s.date} · ${s.goals?.length} goals · ${s.periods} periods</div>
+          </div>
+          <div class="student-score">
+            <div class="score-pct" style="color:${getScoreHex(s.pct)}">${s.pct}%</div>
+            <div class="score-date">${s.earned}/${s.possible} pts</div>
+          </div>
+        </div>`).join('')}`;
+  } catch(e) {
+    console.error('History error:', e);
+  }
 }
- 
-function exportSheet() {
-  const student = currentSheet.student;
+
+// ── SHARING ──
+function shareSheet() {
+  const student = currentSheet?.student;
   const pct = calcPct();
+  if(!student) return;
   document.getElementById('share-preview').innerHTML = `
     <strong>Subject:</strong> ${student.name}'s Daily Point Sheet — ${currentSheet.date}<br><br>
     Good evening,<br><br>
@@ -1198,82 +1280,83 @@ function exportSheet() {
     <strong>Daily Score: ${pct}%</strong> (Goal: ${student.goalPct}%)<br>
     Status: ${pct >= student.goalPct ? '✅ Goal Met!' : '⚠️ Working Toward Goal'}<br><br>
     Please reach out if you have any questions.<br>
-    — ${currentUser ? currentUser.name : 'Your Teacher'}
-  `;
+    — ${userProfile?.name || 'Your Teacher'}`;
   document.getElementById('modal-share').classList.remove('hide');
 }
- 
+
 function sendShare() {
   const email = document.getElementById('share-email').value;
-  if(!email) { alert('Please enter a parent email address.'); return; }
+  if(!email) return showToast('Please enter an email address', 'error');
   closeModal('modal-share');
-  alert('📧 Summary sent to ' + email + '!');
+  showToast('📧 Summary sent to ' + email, 'success');
 }
- 
-function generateReport() {
-  alert('📈 Generating PDF progress report... (Connects to your PDF export in the full version)');
+
+// ── SETTINGS ──
+async function saveSettings() {
+  const name = document.getElementById('settings-name').value.trim();
+  const school = document.getElementById('settings-school').value.trim();
+  try {
+    await db.collection('users').doc(currentUser.uid).update({ name, school });
+    userProfile.name = name;
+    userProfile.school = school;
+    document.getElementById('sidebar-username').textContent = name;
+    showToast('Settings saved ✅', 'success');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'error');
+  }
 }
- 
-// ── STUDENT MANAGEMENT ──
+
+// ── TABS ──
+function showTab(tab) {
+  document.querySelectorAll('.app-tab').forEach(t => t.classList.add('hide'));
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('tab-' + tab)?.classList.remove('hide');
+  const nav = document.getElementById('nav-' + tab);
+  if(nav) nav.classList.add('active');
+  if(tab === 'history') renderHistory();
+  if(tab === 'students') renderStudentList();
+}
+
+// ── MODALS ──
 function openAddStudentModal() {
+  const limit = getPlanLimit();
+  if (students.length >= limit.students) {
+    openUpgradeModal(`You've reached the ${limit.students}-student limit. Upgrade to add more students.`);
+    return;
+  }
   document.getElementById('modal-add-student').classList.remove('hide');
 }
- 
-function addStudent() {
-  const name = document.getElementById('ns-name').value.trim();
-  if(!name) { alert('Please enter a student name.'); return; }
-  const goals = document.getElementById('ns-goals').value.trim().split('\n').filter(g=>g.trim());
-  if(!goals.length) { alert('Please enter at least one behavioral goal.'); return; }
-  const s = {
-    id: 's' + Date.now(),
-    name,
-    grade: document.getElementById('ns-grade').value,
-    goalPct: parseInt(document.getElementById('ns-goal').value) || 80,
-    color: AVATAR_COLORS[students.length % AVATAR_COLORS.length],
-    periods: parseInt(document.getElementById('ns-periods').value),
-    goals,
-    lastScore: 0
-  };
-  students.push(s);
-  closeModal('modal-add-student');
-  renderStudentList('student-list-dashboard');
-  renderStudentList('student-list-full');
-  document.getElementById('stat-students').textContent = students.length;
-  document.getElementById('stat-students').title = 'Individual plan: max 5 students';
-  alert('✅ ' + name + ' added! Click their name to open a point sheet.');
+function closeModal(id) { document.getElementById(id)?.classList.add('hide'); }
+function openUpgradeModal(msg) {
+  document.getElementById('upgrade-message').textContent = msg || 'Upgrade your plan to unlock more features.';
+  document.getElementById('modal-upgrade').classList.remove('hide');
 }
- 
-function closeModal(id) {
-  document.getElementById(id).classList.add('hide');
+
+// ── SALES ──
+function contactSales(plan) {
+  closeModal('modal-upgrade');
+  const prices = { school: '$897/year', district: '$1,497/year' };
+  const subject = encodeURIComponent(`PointSheet Pro ${plan.charAt(0).toUpperCase()+plan.slice(1)} License Inquiry`);
+  const body = encodeURIComponent(`Hi SAMS EDU Solutions,\n\nI'm interested in the ${plan} license (${prices[plan]}) for PointSheet Pro.\n\nMy name: ${userProfile?.name || ''}\nSchool: ${userProfile?.school || ''}\nEmail: ${currentUser?.email || ''}\n\nPlease send me more information.\n\nThank you!`);
+  window.open(`mailto:hello@samsedu.com?subject=${subject}&body=${body}`);
 }
- 
-// ── REPORTS CHART ──
-function renderChartBars() {
-  const el = document.getElementById('chart-bars');
-  if(!el) return;
-  const data = [72,78,65,88,80,82,85,75,91,88];
-  const labels = ['3/4','3/5','3/6','3/7','3/10','3/11','3/12','3/13','3/14','3/17'];
-  el.innerHTML = data.map((v,i) => `
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-      <div style="font-size:10px;color:var(--ink3)">${v}%</div>
-      <div style="width:100%;height:${v}%;background:${getScoreHex(v)};border-radius:3px 3px 0 0;opacity:.85;min-height:4px;transition:height .4s"></div>
-      <div style="font-size:10px;color:var(--ink3);white-space:nowrap">${labels[i]}</div>
-    </div>
-  `).join('');
+
+// ── HELPERS ──
+function getScoreColor(pct) { return pct >= 80 ? 'high' : pct >= 65 ? 'mid' : 'low'; }
+function getScoreHex(pct) { return pct >= 80 ? '#15803D' : pct >= 65 ? '#B45309' : '#DC2626'; }
+
+function showToast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => el.className = '', 3500);
 }
- 
-// ── STRIPE ──
-function startCheckout(plan) {
-  alert('⚡ Redirecting to Stripe checkout for ' + plan + ' plan...\n\nIn production: connects to your Stripe payment link.');
-}
-function manageStripe() {
-  alert('Redirecting to Stripe customer portal...');
-}
- 
+
 // ── LANDING DEMO TABLE ──
-(function buildDemoTable() {
+(function buildDemo() {
   const goals = ['Stays on task','Follows directions','Respectful language','Completes work'];
-  const scores = [[2,2,1,2,2,2],[2,2,2,1,2,2],[1,2,2,2,1,2],[2,1,2,2,2,2]];
+  const scores = [[2,2,1,2],[2,2,2,1],[1,2,2,2],[2,1,2,2]];
   const colors = ['#1D4ED8','#15803D','#B45309','#DC2626'];
   const tbody = document.getElementById('demo-tbody');
   if(!tbody) return;
@@ -1282,26 +1365,13 @@ function manageStripe() {
       <td style="padding:8px 10px;font-size:13px;display:flex;align-items:center;gap:8px;min-width:160px">
         <div style="width:8px;height:8px;border-radius:2px;background:${colors[gi]};flex-shrink:0"></div>${g}
       </td>
-      ${scores[gi].map(v => `
+      ${scores[gi].map(v=>`
         <td style="text-align:center;padding:6px 8px">
           <span style="display:inline-block;width:26px;height:26px;border-radius:4px;font-size:12px;font-weight:700;line-height:26px;background:${v===2?'#16A34A':v===1?'#D97706':'#DC2626'};color:#fff">${v}</span>
-        </td>
-      `).join('')}
+        </td>`).join('')}
       <td style="text-align:center;padding:6px 10px;font-size:13px;font-weight:700;color:${getScoreHex(Math.round(scores[gi].reduce((a,b)=>a+b,0)/scores[gi].length/2*100))}">${scores[gi].reduce((a,b)=>a+b,0)}/${scores[gi].length*2}</td>
-    </tr>
-  `).join('');
+    </tr>`).join('');
 })();
- 
-function getScoreColor(pct) {
-  if(pct >= 80) return 'high';
-  if(pct >= 65) return 'mid';
-  return 'low';
-}
-function getScoreHex(pct) {
-  if(pct >= 80) return '#15803D';
-  if(pct >= 65) return '#B45309';
-  return '#DC2626';
-}
 </script>
 </body>
 </html>
